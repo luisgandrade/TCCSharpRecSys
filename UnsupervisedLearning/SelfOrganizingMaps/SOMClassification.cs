@@ -94,7 +94,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
         foreach (var neuron in neuronArray)
         {
           var attributes = neuron.weights.Select((w, index) => new { index = index + 1, weight = w }).Join(referenceValues, w => w.index, rv => rv.Key.attr_index,
-            (w, rv) => new { distance = Math.Abs(rv.Value - w.weight), attr = rv.Key }).OrderByDescending(da => da.distance).Select(da => da.attr.attribute).Take(returnCount);
+            (w, rv) => new { distance = w.weight * rv.Key.population_standard_deviation + rv.Key.population_average, attr = rv.Key }).OrderByDescending(da => da.distance).Select(da => da.attr.attribute).Take(returnCount);
 
           nodeLabels.Add(new NodeLabel(neuron.x, neuron.y, attributes.ToList()));
         }

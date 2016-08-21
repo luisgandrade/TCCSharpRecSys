@@ -7,6 +7,7 @@ using UnsupervisedLearning;
 using UnsupervisedLearning.SelfOrganizingMaps;
 using UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions;
 using UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions;
+using Utils;
 
 namespace TCCSharpRecSys
 {
@@ -19,7 +20,7 @@ namespace TCCSharpRecSys
         var fileReader = new FileReader();
 
         Console.WriteLine("Reading movies...");
-        var movies = fileReader.readMovies();
+        //var movies = fileReader.readMovies();
         //var attr_counts = createAttributes(movies);        
         trainSOM();
         classify();
@@ -28,7 +29,7 @@ namespace TCCSharpRecSys
       }
       catch (Exception e)
       {
-        Console.WriteLine(e.Message);
+        Console.WriteLine(e.StackTrace);
         Console.ReadKey();
       }
     }
@@ -41,9 +42,9 @@ namespace TCCSharpRecSys
       foreach (var attr_count in new[] { 157 })
       {
         var attributes = fileReader.readAttributes(attr_count);
-        foreach (var dimensions in new[] { 10, 15, 20 })
+        foreach (var dimensions in new[] { 20, 25 })
         {
-          for (int i = 1; i <= 9; i++)
+          for (int i = 1; i <= 3; i++)
           {
             Console.WriteLine("Rotulando redes. attr_count: " + attr_count + "; dimensions: " + dimensions + "; instance: " + i);
             var neurons = fileReader.existingNeurons(attr_count, dimensions, dimensions, i);
@@ -64,9 +65,9 @@ namespace TCCSharpRecSys
       foreach (var attr_count in new[] { 157 })
       {
         var moviesAttributes = fileReader.readMoviesAttributes(attr_count);
-        foreach (var dimensions in new[] { 10, 15, 20 })
+        foreach (var dimensions in new[] { 20, 25 })
         {
-          for (int i = 1; i <= 10; i++)
+          for (int i = 1; i <= 3; i++)
           {
             Console.WriteLine("Classificando. attr_count: " + attr_count + "; dimensions: " + dimensions + "; instance: " + i);
             var neurons = fileReader.existingNeurons(attr_count, dimensions, dimensions, i);
@@ -88,11 +89,11 @@ namespace TCCSharpRecSys
       var fileReader = new FileReader();
       var fileWritter = new FileWritter();
 
-      foreach (var attr_count in new[] { 157, 1199 })
+      foreach (var attr_count in new[] { 157 })
       {
-        foreach (var dimensions in new[] { 10, 15, 20 })
+        foreach (var dimensions in new[] { 20, 25 })
         {
-          for (int i = 0; i < 10; i++)
+          for (int i = 0; i < 3; i++)
           {
             Console.WriteLine("Criando SOM. attr_count: " + attr_count + "; dimensions: " + dimensions + "; instance: " + i);
             var movieAttributes = fileReader.readMoviesAttributes(attr_count)
@@ -101,11 +102,14 @@ namespace TCCSharpRecSys
                                           .ToList();
 
             var som = new SelfOrganizingMap(dimensions, dimensions, attr_count, new GaussianNeighborhood((int)((double)dimensions/2)), new LearningRateFunction(), true);
+            fileWritter.writeSOMNodes(som);
             var stop = false;
             var iteration = 0;
+            
             while (!stop)
             {
-              //Console.WriteLine(iteration);
+              if (iteration % movieAttributes.Count == 0)
+                movieAttributes.Shuffle();
               stop = som.iterate(movieAttributes[iteration % movieAttributes.Count], iteration);
               iteration++;
             }

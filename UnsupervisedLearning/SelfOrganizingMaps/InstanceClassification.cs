@@ -17,8 +17,8 @@ namespace UnsupervisedLearning
 
     public InstanceClassification(int instance_id, int x, int y)
     {
-      if (instance_id <= 0 || x <= 0 || y <= 0)
-        throw new InvalidOperationException("instance_id <= 0 || x <= 0 || y <= 0");
+      if (instance_id <= 0 || x < 0 || y < 0)
+        throw new InvalidOperationException("instance_id <= 0 || x < 0 || y < 0");
 
       this.instance_id = instance_id;
       this.x = x;

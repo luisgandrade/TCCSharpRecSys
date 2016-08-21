@@ -22,7 +22,18 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions
     
     public double apply(Neuron bmu, Neuron neighbor, int iteration)
     {
-      var neighborhoodWidthSquared = Math.Pow(initial_neighborhood_width * Math.Exp(-(iteration / time_constant)), 2);
+      if (bmu == null)
+        throw new ArgumentException("bmu");
+      if (neighbor == null)
+        throw new ArgumentException("neighbor");
+      if (iteration > 2000)
+        iteration = iteration;
+      var neighborhoodWidth = initial_neighborhood_width * Math.Exp(-(iteration / time_constant));
+      //Se a largura na iteração for suficiente pequena a exponencial abaixo retornará um valor bem menor. Então paramos por aqui
+      //para evitar que a atualização do quadrado da largura da vizinhança decaia ao ponto de causar underflow.
+      if (neighborhoodWidth < .001)
+        return bmu == neighbor ? 1 : 0;
+      var neighborhoodWidthSquared = Math.Pow(neighborhoodWidth, 2);
       return Math.Exp(-(Math.Pow(bmu.distance(neighbor), 2) / (2 * neighborhoodWidthSquared)));      
     }
     

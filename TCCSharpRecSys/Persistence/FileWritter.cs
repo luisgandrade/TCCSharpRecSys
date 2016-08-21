@@ -41,7 +41,9 @@ namespace TCCSharpRecSys.Persistence
     
     public void writeSOMClassification(SOMClassification som, IEnumerable<InstanceClassification> moviesAndNodes)
     {
-      using(var writter = new StreamWriter(filesPath + "movie_classification_" + som.attr_count + "_" + som.rows + "_" + som.columns + "_" + (som.instance) + ".csv"))
+      if (!Directory.Exists(filesPath + "movie_classification"))
+        Directory.CreateDirectory(filesPath + "movie_classification");
+      using (var writter = new StreamWriter(filesPath + "movie_classification\\" + som.attr_count + "_" + som.rows + "_" + som.columns + "_" + (som.instance) + ".csv"))
       {
         foreach (var movie in moviesAndNodes)
           writter.WriteLine(movie.instance_id + "," + movie.x + "," + movie.y);
@@ -56,7 +58,7 @@ namespace TCCSharpRecSys.Persistence
       var regex = new Regex(somAlg.attr_count + "_" + somAlg.rows + "_" + somAlg.columns + "_([0-9]*).csv");
       var maxInstance = existingFilesInDirectory.Where(f => regex.IsMatch(f)).Select(f => int.Parse(regex.Match(f).Groups[1].Value)).DefaultIfEmpty(0).Max();
 
-      using (var writter = new StreamWriter(filesPath + "som_nodes\\som_nodes_" + somAlg.attr_count + "_" + somAlg.rows + "_" + somAlg.columns + "_" + (maxInstance + 1) + ".csv"))
+      using (var writter = new StreamWriter(filesPath + "som_nodes\\" + somAlg.attr_count + "_" + somAlg.rows + "_" + somAlg.columns + "_" + (maxInstance + 1) + ".csv"))
       {
         foreach (var line in somAlg.printNetwork())
           writter.WriteLine(line);
