@@ -1,5 +1,4 @@
-﻿using Lib;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace UnsupervisedLearning
 {
-  public interface IUnsupervisedLearning
+  public interface IClassLabel<T>
+    where T: IEquatable<T>
   {
-
-    bool iterate(IList<TagRelevance> instance_attributes, int iteration);
-
+    //string class_label { get; }
   }
 }

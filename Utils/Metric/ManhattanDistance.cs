@@ -4,12 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Utils
+namespace Utils.Metric
 {
-  public class EuclidianDistance
+  /// <summary>
+  /// Distância entre dois pontos usando distância de Manhattan.
+  /// </summary>
+  public class ManhattanDistance : IMetric
   {
-
-    public static double euclidianDistance(IList<double> first, IList<double> second)
+    public double applyMetric(IList<double> first, IList<double> second)
     {
       if (first == null)
         throw new ArgumentException("first");
@@ -18,8 +20,7 @@ namespace Utils
       if (first.Count != second.Count)
         throw new InvalidOperationException("first != second");
 
-      var squaresOfDifferences = first.Zip(second, (f, s) => (f - s) * (f - s));
-      return Math.Sqrt(squaresOfDifferences.Sum());
+      return first.Zip(second, (f, s) => Math.Abs(f - s)).Sum();
     }
   }
 }

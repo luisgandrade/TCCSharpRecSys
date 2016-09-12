@@ -40,7 +40,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IClassification.cs" />
+    <Compile Include="IClassLabel.cs" />
+    <Compile Include="IMovieClassification.cs" />
     <Compile Include="IClustering.cs" />
+    <Compile Include="Instance.cs" />
+    <Compile Include="KMeans\Cluster.cs" />
+    <Compile Include="KMeans\FuzzyCMeans.cs" />
+    <Compile Include="KMeans\InstanceClustered.cs" />
+    <Compile Include="KMeans\InstanceFuzzyClustered.cs" />
+    <Compile Include="KMeans\StandardKMeans.cs" />
+    <Compile Include="MovieClassification.cs" />
     <Compile Include="SelfOrganizingMaps\InstanceClassification.cs" />
     <Compile Include="IUnsupervisedLearning.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -48,15 +58,16 @@
     <Compile Include="SelfOrganizingMaps\LearningRateFunctions\LearningRateFunction.cs" />
     <Compile Include="SelfOrganizingMaps\NeighborhoodFunctions\GaussianNeighborhood.cs" />
     <Compile Include="SelfOrganizingMaps\NeighborhoodFunctions\INeighborhoodFunction.cs" />
+    <Compile Include="SelfOrganizingMaps\Network\Coordinate.cs" />
     <Compile Include="SelfOrganizingMaps\Network\Network.cs" />
     <Compile Include="SelfOrganizingMaps\Network\Neuron.cs" />
     <Compile Include="SelfOrganizingMaps\NodeLabel.cs" />
     <Compile Include="SelfOrganizingMaps\SelfOrganizingMap.cs" />
     <Compile Include="SelfOrganizingMaps\SOMClassification.cs" />
+    <Compile Include="UserProfile.cs" />
+    <Compile Include="UserProfileBuilder.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="KMeans\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\Lib\Lib.csproj">
       <Project>{fee83318-e50e-421b-881e-222bda20ad97}</Project>

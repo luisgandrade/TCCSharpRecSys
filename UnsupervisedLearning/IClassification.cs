@@ -7,10 +7,9 @@ using System.Threading.Tasks;
 
 namespace UnsupervisedLearning
 {
-  public interface IUnsupervisedLearning
+  public interface IClassification<T>
+    where T : IEquatable<T>
   {
-
-    bool iterate(IList<TagRelevance> instance_attributes, int iteration);
-
+    IEnumerable<IClassLabel<T>> classify(IList<double> instance_attributes);
   }
 }

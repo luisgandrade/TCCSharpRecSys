@@ -41,8 +41,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EnumUtil.cs" />
-    <Compile Include="EuclidianDistance.cs" />
     <Compile Include="LinqUtil.cs" />
+    <Compile Include="Metric\CosineSimilarity.cs" />
+    <Compile Include="Metric\EuclidianDistance.cs" />
+    <Compile Include="Metric\IMetric.cs" />
+    <Compile Include="Metric\ManhattanDistance.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

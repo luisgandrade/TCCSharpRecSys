@@ -26,8 +26,6 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions
         throw new ArgumentException("bmu");
       if (neighbor == null)
         throw new ArgumentException("neighbor");
-      if (iteration > 2000)
-        iteration = iteration;
       var neighborhoodWidth = initial_neighborhood_width * Math.Exp(-(iteration / time_constant));
       //Se a largura na iteração for suficiente pequena a exponencial abaixo retornará um valor bem menor. Então paramos por aqui
       //para evitar que a atualização do quadrado da largura da vizinhança decaia ao ponto de causar underflow.

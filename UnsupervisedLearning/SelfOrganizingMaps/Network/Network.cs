@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions;
 using UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions;
 using Utils;
+using Utils.Metric;
 
 namespace UnsupervisedLearning.SelfOrganizingMaps.Network
 {
@@ -34,8 +35,10 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
     /// Grade bidimensional de neurônios.
     /// </summary>
     internal Neuron[][] neurons { get; private set; }
+
+    private IMetric metric;
     
-    internal Network(int rows, int columns, int attr_count)      
+    internal Network(int rows, int columns, int attr_count, IMetric metric)      
     {
       if (rows <= 0 || columns <= 0 || attr_count <= 0)
         throw new InvalidOperationException("rows <= 0 || columns <= 0 || attr_count <= 0");
@@ -43,6 +46,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
       this.rows = rows;
       this.columns = columns;
       this.attr_count = attr_count;
+      this.metric = metric;
       neurons = new Neuron[rows][];
       for (int i = 0; i < rows; i++)
         neurons[i] = new Neuron[columns];
@@ -58,11 +62,12 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
       }
     }
 
-    internal Network(int rows, int columns, int attr_count, int instance, IEnumerable<Tuple<int, int, List<double>>> existingNeurons)      
+    internal Network(int rows, int columns, int attr_count, int instance, IMetric metric, IEnumerable<Tuple<int, int, List<double>>> existingNeurons)      
     {
       this.rows = rows;
       this.columns = columns;
       this.attr_count = attr_count;
+      this.metric = metric;
       neurons = new Neuron[rows][];
       for (int i = 0; i < rows; i++)
         neurons[i] = new Neuron[columns];
@@ -80,9 +85,10 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
 
     internal Network(Network network)      
     {
-      this.rows = rows;
-      this.columns = columns;
-      this.attr_count = attr_count;
+      this.rows = network.rows;
+      this.columns = network.columns;
+      this.attr_count = network.attr_count;
+      this.metric = network.metric;
       neurons = new Neuron[rows][];
       for (int i = 0; i < rows; i++)
         neurons[i] = new Neuron[columns];
@@ -90,7 +96,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
       this.instance = network.instance;
       for (int i = 0; i < rows; i++)
         for (int j = 0; j < columns; j++)
-          neurons[i][j] = new Neuron(network.neurons[i][j].x, network.neurons[i][j].y, network.neurons[i][j].weights);      
+          neurons[i][j] = new Neuron(network.neurons[i][j].coordinates.x, network.neurons[i][j].coordinates.y, network.neurons[i][j].weights);      
     }
 
     /// <summary>
@@ -109,7 +115,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
       {
         foreach (var neuron in neuronArray)
         {
-          var distance = EuclidianDistance.euclidianDistance(neuron.weights, instanceAttributes);
+          var distance = metric.applyMetric(neuron.weights, instanceAttributes);
           if (distance <= minDistance)
           {
             minDistance = distance;
@@ -136,28 +142,15 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
           neurons[i][j].updateNeuron(instanceAttributes, neighborhoodFunction.apply(bmu, neurons[i][j], iteration), learningRateFunction.apply(iteration));
     }
 
-
-    internal Tuple<int, int> classifyInstance(IList<double> movieAttribute)
+    internal IEnumerable<Neuron> classifyInstance(IList<double> movieAttributes)
     {
-      var x = 0;
-      var y = 0;
-      var minDistance = double.MaxValue;
-      for (int i = 0; i < rows; i++)
-      {
-        for (int j = 0; j < columns; j++)
-        {
-          var distance = EuclidianDistance.euclidianDistance(neurons[i][j].weights, movieAttribute);
-          if (distance < minDistance)
-          {
-            minDistance = distance;
-            x = i;
-            y = j;
-          }
-        }
-      }
-      return new Tuple<int, int>(x, y);
-    }
+      if (movieAttributes == null)
+        throw new ArgumentException("movieAttributes");
 
+      return neurons.SelectMany(n1 => n1.Select(n2 => new { distance = metric.applyMetric(n2.weights, movieAttributes), neuron = n2 }))
+                    .OrderBy(n => n.distance)
+                    .Select(n => n.neuron);
+    }
 
     /// <summary>
     /// Retorna um enumerável com as linhas a serem impressas no arquivo, onde cada linha representa um neurônio na rede.

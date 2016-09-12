@@ -15,22 +15,18 @@ namespace Lib
 
     public int year { get; private set; }
 
-    public Genre genres { get; private set; }
+    //public Genre genres { get; private set; }
 
-    public string keywords { get; private set; }    
+    //public string keywords { get; private set; }    
 
-    public Movie(int id, string title, int year, Genre genres, string keywords)
+    public Movie(int id, string title, int year)
     {
       if (title == null)
         throw new ArgumentException("title");
-      if (keywords == null)
-        throw new ArgumentException("keywords");
 
       this.id = id;
       this.title = title;
       this.year = year;
-      this.genres = genres;
-      this.keywords = keywords;
     }
   }
 }

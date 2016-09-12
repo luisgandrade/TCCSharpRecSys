@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace UnsupervisedLearning
 {
-  public interface IUnsupervisedLearning
+  public interface IMovieClassification<T>
   {
+    Movie movie { get; }
 
-    bool iterate(IList<TagRelevance> instance_attributes, int iteration);
-
+    T class_label { get; }
   }
 }

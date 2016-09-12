@@ -10,7 +10,7 @@ namespace UnsupervisedLearning
   public interface IClustering
   {
 
-    bool iterate(IList<MovieAttribute> instanceAttributes, int iteration);
+    bool iterate(IList<TagRelevance> instanceAttributes, int iteration);
 
   }
 }

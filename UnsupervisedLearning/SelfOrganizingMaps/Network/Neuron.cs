@@ -1,41 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Utils;
+using Utils.Metric;
 
 namespace UnsupervisedLearning.SelfOrganizingMaps.Network
 {
   /// <summary>
   /// Representa um único neurônio no mapa auto-organizável.
   /// </summary>
-  public class Neuron
+  public class Neuron : IClassLabel<Neuron>, IEquatable<Neuron>
   {
-    /// <summary>
-    /// Coordenada x do neurônio na grade bidimensional.
-    /// </summary>
-    internal int x { get; private set; }
-    /// <summary>
-    /// Coordenada y do neurônio na grade bidimensional.
-    /// </summary>
-    internal int y { get; private set; }
+    internal Coordinate coordinates { get; private set; }
     /// <summary>
     /// Pesos nas entradas desse neurônio. 
     /// </summary>
     internal IList<double> weights { get; private set; }
-
-
+    
     internal Neuron(int x, int y, IList<double> weights)
     {
       if (weights == null)
         throw new ArgumentException("weights");
-      if (x < 0 || y < 0)
-        throw new InvalidOperationException("Both x and y muste positive integers.");
-
-      this.x = x;
-      this.y = y;
+            
       this.weights = weights;
+      this.coordinates = new Coordinate(x, y);
     }
 
     /// <summary>
@@ -63,7 +50,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
 
     internal double distance(Neuron other)
     {
-      return EuclidianDistance.euclidianDistance(new List<double> { this.x, this.y }, new List<double> { other.x, other.y });
+      return EuclidianDistance.distance(new List<double> { this.coordinates.x, this.coordinates.y }, new List<double> { other.coordinates.x, other.coordinates.y });
     }
 
     public override string ToString()
@@ -73,7 +60,14 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
       for (int i = 1; i < weights.Count; i++)
         sb.Append(";" + weights[i]);
       sb.Append("]");
-      return string.Format("[{0};{1}],{2}", x, y, sb.ToString());
+      return string.Format("[{0};{1}],{2}", coordinates.x, coordinates.y, sb.ToString());
+    }
+
+    public bool Equals(Neuron other)
+    {
+      if (other == null)
+        return false;
+      return this.coordinates.x == other.coordinates.x && this.coordinates.y == other.coordinates.y; 
     }
   }
 }
