@@ -20,7 +20,7 @@ namespace UnsupervisedLearning.KMeans
       if (degree_of_pertinence < 0 || degree_of_pertinence > 1)
         throw new ArgumentOutOfRangeException("O grau de pertinência deve estar entre zero e um.");
 
-      this.degree_of_pertinence = degree_of_pertinence;
+      this.degree_of_pertinence = degree_of_pertinence;      
     }
   }
 }

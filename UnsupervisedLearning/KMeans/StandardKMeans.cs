@@ -13,12 +13,16 @@ namespace UnsupervisedLearning.KMeans
   /// Algoritmo K-Means padrão. Essa implementação usa o método de Forgy para inicialização dos clusters, onde
   /// são escolhidas k observações aleatórias do dataset e essas são usadas como os centróides iniciais dos clusters.
   /// </summary>
-  public class StandardKMeans
+  public class StandardKMeans : IUnsupervisedLearning
   {
+
+    public int cluster_count { get; private set; }
     /// <summary>
     /// Clusters gerados.
     /// </summary>
     public IList<Cluster> clusters { get; private set; }
+
+    
     /// <summary>
     /// Instâncias associadas a um dos clusters existentes.
     /// </summary>
@@ -26,16 +30,20 @@ namespace UnsupervisedLearning.KMeans
     
         
 
-    public void cluster(IList<Instance> trainingInstances)
+    public void train(IList<Instance> instances)
     {
-      if (trainingInstances == null)
+      if (instances == null)
         throw new ArgumentException("trainingInstances");
-      if (!trainingInstances.Any())
+      if (!instances.Any())
         throw new InvalidOperationException("Não há nenhuma instância para ser treinada.");
-      if (trainingInstances.Select(ti => ti.tag_relevances.Count).Distinct().Count() > 1)
+      if (instances.Select(ti => ti.tag_relevances.Count).Distinct().Count() > 1)
         throw new InvalidOperationException("Existem instâncias com vetores de atributos de tamanhos diferentes.");
-      if (trainingInstances[0].tag_relevances.Count != clusters[0].centroid.Count)
+      if (instances[0].tag_relevances.Count != clusters[0].centroid.Count)
         throw new InvalidOperationException("A quantidade de atributos das instâncias não bate com a quantidade de atributos dos clusters já definidos.");
+
+      instances.Shuffle();
+      if (!clusters.Any())
+        clusters = instances.Take(cluster_count).Select((im, index) => new Cluster(index, im.tag_relevances.Select(tr => tr.relevance).ToList())).ToList();
 
       var stop = false;
       var iteration = 1;
@@ -43,7 +51,7 @@ namespace UnsupervisedLearning.KMeans
       {
         Console.WriteLine("Iteration " + iteration);
         //assignment step
-        var newInstancesClustered = trainingInstances.GroupJoin(clusters, ti => true, c => true,
+        var newInstancesClustered = instances.GroupJoin(clusters, ti => true, c => true,
           (ti, c) => new InstanceClustered(ti, c.WhereMin(cl => EuclidianDistance.distance(ti.tag_relevances.Select(tr => tr.relevance).ToList(), cl.centroid)))).ToList();
 
         //update step
@@ -56,9 +64,8 @@ namespace UnsupervisedLearning.KMeans
           
         iteration++;
       }
-    }
+    }    
 
-    
     /// <param name="initialMeans">instâncias do dataset serão usadas para criação dos clusters</param>
     public StandardKMeans(IList<Instance> initialMeans)
     {
@@ -66,6 +73,14 @@ namespace UnsupervisedLearning.KMeans
         throw new ArgumentException("initialMeans");
 
       clusters = initialMeans.Select((im, index) => new Cluster(index, im.tag_relevances.Select(tr => tr.relevance).ToList())).ToList();
+      cluster_count = initialMeans.Count;
+    }
+
+    /// <param name="initialMeans">instâncias do dataset serão usadas para criação dos clusters</param>
+    public StandardKMeans(int clusterCount)
+    {
+      clusters = new List<Cluster>();
+      cluster_count = clusterCount;
     }
   }
 }

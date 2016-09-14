@@ -40,20 +40,16 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions
     /// <summary>
     /// Configura uma função de taxa de aprendizado com a taxa de aprendizado, constante de decaimento e limiar de transição de fase informados.
     /// </summary>
-    public LearningRateFunction(double initialLearningRate, double timeConstant, double convergencePhaseThreshold)
+    public LearningRateFunction(double initialLearningRate, double timeConstant)
     {
       if (initialLearningRate <= 0)
         throw new InvalidOperationException("Taxa de aprendizado inicial deve ser maior que zero.");
       if (timeConstant <= 0)
         throw new InvalidOperationException("Constante de decaimento deve ser maior que zero.");
-      if (convergencePhaseThreshold <= 0)
-        throw new InvalidOperationException("Limiar para transição para fase de convergência deve ser maior que zero.");
-      if (convergencePhaseThreshold >= initialLearningRate)
-        throw new InvalidOperationException("Limiar para transição para fase de convergência deve ser menor que a taxa de aprendizado inicial.");
 
       initial_learning_rate = initialLearningRate;
       time_constant = timeConstant;
-      convergence_phase_threshold = convergencePhaseThreshold;
+      convergence_phase_threshold = 0.01;
       advance_phase_threshold = (int)(- timeConstant * Math.Log(convergence_phase_threshold / initialLearningRate));
     }
 
@@ -62,7 +58,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions
     /// Haykin em Redes Neurais: Princípios e Prática(taxa de aprendizado inical = 0.1; constante de tempo = 1000; limiar de transição de fase = 0.01)
     /// </summary>
     public LearningRateFunction()
-      :this(0.1, 1000, 0.01)
+      :this(0.1, 1000)
     { }
   }
 }

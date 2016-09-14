@@ -10,7 +10,7 @@ namespace UnsupervisedLearning
   public interface IUnsupervisedLearning
   {
 
-    bool iterate(IList<TagRelevance> instance_attributes, int iteration);
+    void train(IList<Instance> instances);
 
   }
 }

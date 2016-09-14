@@ -35,13 +35,16 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions
       return Math.Exp(-(Math.Pow(bmu.distance(neighbor), 2) / (2 * neighborhoodWidthSquared)));      
     }
     
-    public GaussianNeighborhood(double initialNeighborhoodWidth)
+    public GaussianNeighborhood(double initialNeighborhoodWidth, double timeConstant)
     {
       if (initialNeighborhoodWidth <= 0)
         throw new InvalidOperationException("Largura inicial da vizinhança deve ser maior que zero.");
 
       this.initial_neighborhood_width = initialNeighborhoodWidth;
-      this.time_constant = 1000/Math.Log(initialNeighborhoodWidth);
+      this.time_constant = timeConstant/Math.Log(initialNeighborhoodWidth);
     }
+
+    public GaussianNeighborhood(double initialWidth)
+      : this(initialWidth, 1000) { }
   }
 }

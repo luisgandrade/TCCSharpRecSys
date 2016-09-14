@@ -13,7 +13,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
   /// <summary>
   /// Implementação do algoritmo de mapas auto-organizáveis.
   /// </summary>
-  public class SelfOrganizingMap : IClustering
+  public class SelfOrganizingMap : IUnsupervisedLearning
   {
     private Network.Network network;
     private INeighborhoodFunction neighborhood_function;
@@ -101,6 +101,10 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
       var header = network.neurons.Length + "," + network.neurons[0].Length + "," + (useNormalizedValues ? "t" : "f");
       return new[] { header }.Concat(network.printNetwork());
     }
-    
+
+    public void train(IList<Instance> instances)
+    {
+      throw new NotImplementedException();
+    }
   }
 }
