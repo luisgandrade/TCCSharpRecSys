@@ -40,17 +40,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IClassification.cs" />
     <Compile Include="IClassLabel.cs" />
     <Compile Include="IMovieClassification.cs" />
     <Compile Include="IClustering.cs" />
     <Compile Include="Instance.cs" />
+    <Compile Include="IRecommend.cs" />
     <Compile Include="KMeans\Cluster.cs" />
     <Compile Include="KMeans\FuzzyCMeans.cs" />
     <Compile Include="KMeans\InstanceClustered.cs" />
     <Compile Include="KMeans\InstanceFuzzyClustered.cs" />
     <Compile Include="KMeans\StandardKMeans.cs" />
-    <Compile Include="MovieClassification.cs" />
     <Compile Include="SelfOrganizingMaps\InstanceClassification.cs" />
     <Compile Include="IUnsupervisedLearning.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnsupervisedLearning;
 
 namespace UnsupervisedLearning
 {
@@ -11,6 +12,11 @@ namespace UnsupervisedLearning
   {
 
     void train(IList<Instance> instances);
+
+    IList<IMovieClassification> classify_instances(IList<Instance> tagRelevances);
+
+    IEnumerable<string> printClassifier();
+
 
   }
 }

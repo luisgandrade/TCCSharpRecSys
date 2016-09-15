@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace UnsupervisedLearning
 {
-  public interface IClassLabel<T>
-    where T: IEquatable<T>
+  public interface IClassLabel
   {
     //string class_label { get; }
   }

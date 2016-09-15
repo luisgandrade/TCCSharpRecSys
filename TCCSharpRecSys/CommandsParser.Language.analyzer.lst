@@ -4,7 +4,7 @@
 // ==========================================================================
 //  Version:  1.2.2
 //  Machine:  LUIS-PC
-//  DateTime: 9/13/2016 10:44:54 PM
+//  DateTime: 9/14/2016 10:48:50 PM
 //  UserName: luis
 // ==========================================================================
 
@@ -21,10 +21,10 @@ NotWh           [^ \t\r\n]
 Space           [ \t]
 Integer          [0-9]+
 Double      ([0-9]*|(0?\.[0-9]+)) 
-Str             [a-z][a-zA-Z0-9_-]*
-//-----------------------------^^
-// Warning: No upper bound to range, "'_','-'" included as set class members
-// -------------------------------------------------------------------------
+Str             [a-z][a-zA-Z0-9_-:\\]*
+//-----------------------------^^^
+// Error: Invalid character range: lower bound > upper bound
+// ---------------------------------------------------------
 %{
 
 %}
@@ -45,7 +45,6 @@ Str             [a-z][a-zA-Z0-9_-]*
 ")"                    { return (int) Token.CP;                                           }
 "\.\."                 { return (int) Token.RANGE;                                        }
 ","                    { return (int) Token.COMMA;                                        } 
-"for"                  { return (int) Token.FOR;                                          }               
 "train"                { return (int) Token.TRAIN;                                        }
 "classify"             { return (int) Token.CLASSIFY;                                     }
 "recommend"            { return (int) Token.RECOMMEND;                                    }

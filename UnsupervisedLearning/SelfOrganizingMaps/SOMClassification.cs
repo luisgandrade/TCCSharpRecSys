@@ -70,16 +70,16 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
     }
 
 
-    public IDictionary<IClassLabel<Neuron>, List<Movie>> groupMovies(IList<MovieSOMClassification> movieClassification, IList<Movie> movies)
-    {
-      if (movieClassification == null)
-        throw new ArgumentException("movieClassification");
+    //public IDictionary<IClassLabel<Neuron>, List<Movie>> groupMovies(IList<MovieSOMClassification> movieClassification, IList<Movie> movies)
+    //{
+    //  if (movieClassification == null)
+    //    throw new ArgumentException("movieClassification");
 
-      var moviesLabeled = movies.Join(movieClassification, m => m, m1 => m1.movie, (m, m1) => new { movie = m, x = m1.neuron.coordinates.x, y = m1.neuron.coordinates.y });
+    //  var moviesLabeled = movies.Join(movieClassification, m => m, m1 => m1.movie, (m, m1) => new { movie = m, x = m1.neuron.coordinates.x, y = m1.neuron.coordinates.y });
 
-      return network.neurons.SelectMany(n => n).GroupJoin(moviesLabeled, n => new { x = n.coordinates.x, y = n.coordinates.y }, mc => new { x = mc.x, y = mc.y },
-          (n, mc) => new { neuron = n, movies = mc.Select(m => m.movie) }).ToDictionary(nmc => (IClassLabel<Neuron>)nmc.neuron, nmc => nmc.movies.ToList());
-    }
+    //  return network.neurons.SelectMany(n => n).GroupJoin(moviesLabeled, n => new { x = n.coordinates.x, y = n.coordinates.y }, mc => new { x = mc.x, y = mc.y },
+    //      (n, mc) => new { neuron = n, movies = mc.Select(m => m.movie) }).ToDictionary(nmc => (IClassLabel<Neuron>)nmc.neuron, nmc => nmc.movies.ToList());
+    //}
 
     //public IList<InstanceClassification> classifyInstances(IList<KeyValuePair<int, List<double>>> instancesAttributes)
     //{

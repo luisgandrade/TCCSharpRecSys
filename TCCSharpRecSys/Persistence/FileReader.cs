@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnsupervisedLearning;
+using UnsupervisedLearning.SelfOrganizingMaps;
 
 namespace TCCSharpRecSys.Persistence
 {
@@ -25,7 +26,7 @@ namespace TCCSharpRecSys.Persistence
       movies_read = new List<Movie>();
       ratings_read = new List<Rating>();
       tags_read = new List<Tag>();
-      movie_classification_read = new List<MovieClassification>();
+      movie_classification_read = new List<MovieSOMClassification>();
       tag_relevances_read = new List<TagRelevance>();
     }
 
@@ -48,7 +49,7 @@ namespace TCCSharpRecSys.Persistence
     private IList<Rating> ratings_read;
     private IList<Tag> tags_read;
     private IList<TagRelevance> tag_relevances_read;
-    private IList<MovieClassification> movie_classification_read;
+    private IList<MovieSOMClassification> movie_classification_read;
 
     public IList<Movie> readMovies()
     {
@@ -184,13 +185,13 @@ namespace TCCSharpRecSys.Persistence
       return tagRelevances;
     }
 
-    public IList<MovieClassification> readMovieClassification(int attr_count, int row, int column, int instance)
+    public IList<MovieSOMClassification> readMovieClassification(SelfOrganizingMap som)
     {
       if (movie_classification_read.Any())
         return movie_classification_read;
       if (!movies_read.Any())
         readMovies();
-      reader = new StreamReader(file_path + "movie_classification\\" + attr_count + "_" + row + "_" + column + "_" + instance +".csv");
+      reader = new StreamReader(file_path + "movie_classification\\" + som.attr_count + "_" + som.rows + "_" + som.columns + "_" + som.instance +".csv");
 
       
       var instancesRead = new List<Tuple<int, int, int>>();
@@ -214,7 +215,7 @@ namespace TCCSharpRecSys.Persistence
       if (instancesRead.Count != movies_read.Count)
         throw new InvalidOperationException("Tamanho da lista de classificação de filmes é diferente do tamanho da lista de filmes.");
 
-      var moviesClassification = instancesRead.Join(movies_read, ir => ir.Item1, mr => mr.id, (ir, mr) => new MovieClassification(mr, ir.Item2, ir.Item3)).ToList();
+      var moviesClassification = instancesRead.Join(movies_read, ir => ir.Item1, mr => mr.id, (ir, mr) => new MovieSOMClassification(mr, som.getNeuron(ir.Item2, ir.Item3))).ToList();
 
       movie_classification_read = moviesClassification;
       

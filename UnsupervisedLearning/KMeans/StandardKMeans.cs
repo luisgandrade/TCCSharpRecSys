@@ -64,7 +64,17 @@ namespace UnsupervisedLearning.KMeans
           
         iteration++;
       }
-    }    
+    }
+
+    public IList<IMovieClassification> classify_instances(IList<Instance> tagRelevances)
+    {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<string> printClassifier()
+    {
+      throw new NotImplementedException();
+    }
 
     /// <param name="initialMeans">instâncias do dataset serão usadas para criação dos clusters</param>
     public StandardKMeans(IList<Instance> initialMeans)

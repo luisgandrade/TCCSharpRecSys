@@ -7,7 +7,7 @@ using UnsupervisedLearning;
 
 namespace UnsupervisedLearning.KMeans
 {
-  public class Cluster : IClassLabel<Cluster>, IEquatable<Cluster>
+  public class Cluster : IClassLabel
   {
     public int id { get; private set; }
 

@@ -1,7 +1,9 @@
 ﻿using Lib;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using TCCSharpRecSys.CommandsParser;
 using TCCSharpRecSys.Persistence;
 using UnsupervisedLearning;
 using UnsupervisedLearning.KMeans;
@@ -24,10 +26,18 @@ namespace TCCSharpRecSys
 
       try
       {
-        //Console.WriteLine(args[0]);
-        FileReader.setFilePath(args[0]);
 
-        var fileReader = FileReader.getInstance();
+        
+        var parser = new CommandsParserParser();
+        parser.Parse(File.ReadAllText(args[0]));
+        
+        //parser.
+
+        //Console.WriteLine(args[0]);
+        //FileReader.setFilePath(args[0]);
+        var x = 1;
+        Console.ReadKey();
+        //var fileReader = FileReader.getInstance();
         //var movieClassification = fileReader.readMovieClassification(1128, 20, 20, 2);
         //Console.WriteLine("Lendo filmes");
         //var movies = fileReader.readMovies();

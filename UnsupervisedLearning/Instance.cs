@@ -9,13 +9,16 @@ namespace UnsupervisedLearning
 {
   public class Instance
   {
-    internal IList<TagRelevance> tag_relevances { get; private set; }
+    public Movie movie { get; private set; }
+
+    public IList<TagRelevance> tag_relevances { get; private set; }
 
     public Instance(IList<TagRelevance> tag_relevances)
     {
       if (tag_relevances == null)
         throw new ArgumentException("tag_relevances");
 
+      this.movie = tag_relevances.Select(tr => tr.movie).Distinct().Single();
       this.tag_relevances = tag_relevances;
     }
   }

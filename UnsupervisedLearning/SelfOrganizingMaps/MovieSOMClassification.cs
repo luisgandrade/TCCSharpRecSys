@@ -8,20 +8,19 @@ using UnsupervisedLearning.SelfOrganizingMaps.Network;
 
 namespace UnsupervisedLearning.SelfOrganizingMaps
 {
-  public class MovieSOMClassification : IMovieClassification<Neuron>
+  public class MovieSOMClassification : IMovieClassification
   {
     public Movie movie { get; set; }
 
     public Neuron neuron { get; set; }
 
-    public Neuron class_label
+    public IClassLabel class_label
     {
       get
       {
         return neuron;
       }
-    }
-
+    }    
 
     public MovieSOMClassification(Movie movie, Neuron neuron)
     {

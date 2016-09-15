@@ -34,6 +34,15 @@ namespace TCCSharpRecSys.Persistence
       return file_writter;        
     }
 
+    public static void setFilePath(string filePath)
+    {
+      if (filePath == null)
+        throw new ArgumentException("filePath");
+      if (!Directory.Exists(filePath))
+        throw new InvalidOperationException("Diretório não existe.");
+      file_path = filePath;
+    }
+
     public void log(string line)
     {
       using(var writter = new StreamWriter(file_path + "log.txt", true))

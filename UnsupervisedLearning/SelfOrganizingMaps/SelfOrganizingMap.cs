@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions;
 using UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions;
+using UnsupervisedLearning.SelfOrganizingMaps.Network;
+using Utils;
 using Utils.Metric;
 
 namespace UnsupervisedLearning.SelfOrganizingMaps
@@ -75,7 +77,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
       this.useNormalizedValues = useNormalizedValues;
     }
 
-    public bool iterate(IList<TagRelevance> instanceAttributes, int iteration)
+    private bool iterate(IList<TagRelevance> instanceAttributes, int iteration)
     {      
       if (useNormalizedValues && instanceAttributes.Any(ia => !ia.normalized_relevance.HasValue))
         throw new InvalidOperationException("Algoritmo está setado para usar valores normalizados, porém. algum valor normalizado não foi informado.");
@@ -91,10 +93,10 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
       return iteration >= maxIterations;
     }   
     
-    public SOMClassification getClassifier()
+    public Neuron getNeuron(int x, int y)
     {
-      return new SOMClassification(new Network.Network(network), useNormalizedValues);
-    }    
+      return network.neurons[x][y];
+    } 
 
     public IEnumerable<string> printNetwork()
     {
@@ -102,7 +104,35 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
       return new[] { header }.Concat(network.printNetwork());
     }
 
+    public IList<IMovieClassification> classify_instances<Neuron>(IList<Instance> instances)
+    {
+      return instances.Select(i => new MovieSOMClassification(i.movie,
+        network.classifyInstance(i.tag_relevances.OrderBy(tr => tr.tag.id).Select(tr => useNormalizedValues ? tr.normalized_relevance.Value : tr.relevance).ToList()).First()))
+                      .Cast<IMovieClassification>().ToList();
+    }
+
     public void train(IList<Instance> instances)
+    {
+      if (instances == null)
+        throw new ArgumentException("instances");
+
+      var iteration = 0;
+      var stop = false;
+      while (!stop)
+      {
+        if (iteration % instances.Count == 0)
+          instances.Shuffle();
+
+        stop = iterate(instances[iteration % instances.Count].tag_relevances, iteration);
+      }      
+    }
+
+    public IEnumerable<string> printClassifier()
+    {
+      return network.printNetwork();
+    }
+
+    public IList<IMovieClassification> classify_instances(IList<Instance> tagRelevances)
     {
       throw new NotImplementedException();
     }

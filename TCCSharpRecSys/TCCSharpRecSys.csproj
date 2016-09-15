@@ -27,7 +27,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -36,7 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Label="YltParsers">
-    <Names>CommandsParser-TCCSharpRecSys-CommandsParser</Names>
+    <Names>CommandsParser-TCCSharpRecSys-CommandsParser;Calculator</Names>
   </PropertyGroup>
   <PropertyGroup Label="YltProperties">
     <YltTools>$(SolutionDir)packages\YaccLexTools.0.2.2\tools\</YltTools>
@@ -45,6 +45,9 @@
   </PropertyGroup>
   <PropertyGroup Label="GenerateCommandsParser-TCCSharpRecSys-CommandsParserProperties">
     <CommandsParser-TCCSharpRecSys-CommandsParserParser>$(ProjectDir)CommandsParser\CommandsParser</CommandsParser-TCCSharpRecSys-CommandsParserParser>
+  </PropertyGroup>
+  <PropertyGroup Label="GenerateCalculatorProperties">
+    <CalculatorParser>$(ProjectDir)Calculator</CalculatorParser>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -62,7 +65,6 @@
     <Compile Include="CommandsParser\Nodes\BuildUserProfile.cs" />
     <Compile Include="CommandsParser\Nodes\Classify.cs" />
     <Compile Include="CommandsParser\Nodes\CMeans.cs" />
-    <Compile Include="CommandsParser\Nodes\For.cs" />
     <Compile Include="CommandsParser\Nodes\IAlgorithm.cs" />
     <Compile Include="CommandsParser\Nodes\IStmt.cs" />
     <Compile Include="CommandsParser\Nodes\KMeans.cs" />
@@ -127,9 +129,34 @@
     </None>
     <None Include="CommandsParser\CommandsParser.parser" />
   </ItemGroup>
+  <ItemGroup Label="CalculatorFiles">
+    <Compile Include="Calculator.Parser.cs">
+      <DependentUpon>Calculator.parser</DependentUpon>
+    </Compile>
+    <Compile Include="Calculator.Parser.Generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Calculator.Language.grammar.y</DependentUpon>
+    </Compile>
+    <Compile Include="Calculator.Scanner.cs">
+      <DependentUpon>Calculator.parser</DependentUpon>
+    </Compile>
+    <Compile Include="Calculator.Scanner.Generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Calculator.Language.analyzer.lex</DependentUpon>
+    </Compile>
+    <None Include="Calculator.Language.analyzer.lex">
+      <DependentUpon>Calculator.parser</DependentUpon>
+    </None>
+    <None Include="Calculator.Language.grammar.y">
+      <DependentUpon>Calculator.parser</DependentUpon>
+    </None>
+    <None Include="Calculator.parser" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild" DependsOnTargets="YltBuildGen" />
-  <Target Name="YltBuildGen" DependsOnTargets="GenerateCommandsParser-TCCSharpRecSys-CommandsParser" />
+  <Target Name="YltBuildGen" DependsOnTargets="GenerateCommandsParser-TCCSharpRecSys-CommandsParser;GenerateCalculator" />
   <Target Name="GenerateCommandsParser-TCCSharpRecSys-CommandsParser" Inputs="$(CommandsParser-TCCSharpRecSys-CommandsParserParser).Language.analyzer.lex;$(CommandsParser-TCCSharpRecSys-CommandsParserParser).Language.grammar.y" Outputs="$(CommandsParser-TCCSharpRecSys-CommandsParserParser).Scanner.Generated.cs;$(CommandsParser-TCCSharpRecSys-CommandsParserParser).Parser.Generated.cs">
     <Message Text="Generating scanner for $(CommandsParser-TCCSharpRecSys-CommandsParserParser) ..." />
     <Exec Command="$(GplexTool) &quot;/out:$(CommandsParser-TCCSharpRecSys-CommandsParserParser).Scanner.Generated.cs&quot; &quot;$(CommandsParser-TCCSharpRecSys-CommandsParserParser).Language.analyzer.lex&quot;" WorkingDirectory="$(ProjectDir)" Outputs="$(GenDir)Scanner.cs">
@@ -138,6 +165,16 @@
     <Message Text="Generating parser for $(CommandsParser-TCCSharpRecSys-CommandsParserParser) ..." />
     <Exec Command="$(GppgTool) /no-lines /gplex &quot;$(CommandsParser-TCCSharpRecSys-CommandsParserParser).Language.grammar.y&quot; &gt; &quot;$(CommandsParser-TCCSharpRecSys-CommandsParserParser).Parser.Generated.cs&quot;" WorkingDirectory="$(ProjectDir)" Outputs="$(CommandsParser-TCCSharpRecSys-CommandsParserParser).Parser.Generated.cs">
       <Output TaskParameter="Outputs" ItemName="CommandsParser" />
+    </Exec>
+  </Target>
+  <Target Name="GenerateCalculator" Inputs="$(CalculatorParser).Language.analyzer.lex;$(CalculatorParser).Language.grammar.y" Outputs="$(CalculatorParser).Scanner.Generated.cs;$(CalculatorParser).Parser.Generated.cs">
+    <Message Text="Generating scanner for $(CalculatorParser) ..." />
+    <Exec Command="$(GplexTool) &quot;/out:$(CalculatorParser).Scanner.Generated.cs&quot; &quot;$(CalculatorParser).Language.analyzer.lex&quot;" WorkingDirectory="$(ProjectDir)" Outputs="$(GenDir)Scanner.cs">
+      <Output TaskParameter="Outputs" ItemName="CalculatorScanner" />
+    </Exec>
+    <Message Text="Generating parser for $(CalculatorParser) ..." />
+    <Exec Command="$(GppgTool) /no-lines /gplex &quot;$(CalculatorParser).Language.grammar.y&quot; &gt; &quot;$(CalculatorParser).Parser.Generated.cs&quot;" WorkingDirectory="$(ProjectDir)" Outputs="$(CalculatorParser).Parser.Generated.cs">
+      <Output TaskParameter="Outputs" ItemName="Calculator" />
     </Exec>
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

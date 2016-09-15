@@ -8,7 +8,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
   /// <summary>
   /// Representa um único neurônio no mapa auto-organizável.
   /// </summary>
-  public class Neuron : IClassLabel<Neuron>, IEquatable<Neuron>
+  public class Neuron : IClassLabel
   {
     internal Coordinate coordinates { get; private set; }
     /// <summary>
