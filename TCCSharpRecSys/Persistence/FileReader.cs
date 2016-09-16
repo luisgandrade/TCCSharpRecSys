@@ -51,6 +51,26 @@ namespace TCCSharpRecSys.Persistence
     private IList<TagRelevance> tag_relevances_read;
     private IList<MovieSOMClassification> movie_classification_read;
 
+
+    public IList<int> existingInstances(string sub_dir, string file_prefix)
+    {
+      if (sub_dir == null)
+        throw new ArgumentException("sub_dir");
+      if (file_prefix == null)
+        throw new ArgumentException("file_prefix");
+
+      var regex = new Regex(file_prefix + "([0-9]+)\\.csv");
+      var filesInSubDir = Directory.GetFiles(file_path + "\\" + file_prefix + "\\");
+      var instances = new List<int>();
+      foreach (var file in filesInSubDir)
+      {
+        var match = regex.Match(file);
+        if (match.Success)
+          instances.Add(int.Parse(match.Groups[1].Value));
+      }
+      return instances;
+    }
+
     public IList<Movie> readMovies()
     {
       if (movies_read.Any())

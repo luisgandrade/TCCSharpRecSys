@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using TCCSharpRecSys.CommandsParser;
 using TCCSharpRecSys.Persistence;
 using UnsupervisedLearning;
 using UnsupervisedLearning.KMeans;
@@ -27,15 +26,14 @@ namespace TCCSharpRecSys
       try
       {
 
-        
-        var parser = new CommandsParserParser();
-        parser.Parse(File.ReadAllText(args[0]));
-        
-        //parser.
+        var cli = new CommandLineParser();
+        var act = cli.parseCommands(File.ReadAllText(args[0]));
 
-        //Console.WriteLine(args[0]);
-        //FileReader.setFilePath(args[0]);
-        var x = 1;
+        foreach (var a in act)
+        {
+          a.Invoke();
+        }
+
         Console.ReadKey();
         //var fileReader = FileReader.getInstance();
         //var movieClassification = fileReader.readMovieClassification(1128, 20, 20, 2);

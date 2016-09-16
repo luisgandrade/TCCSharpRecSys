@@ -30,6 +30,11 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
         throw new ArgumentException("neuron");
       this.movie = movie;
       this.neuron = neuron;
-    }    
+    }
+
+    public string print()
+    {
+      throw new NotImplementedException();
+    }
   }
 }

@@ -55,6 +55,30 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
       }
     }
 
+    public string name
+    {
+      get
+      {
+        throw new NotImplementedException();
+      }
+    }
+
+    public string sub_dir
+    {
+      get
+      {
+        throw new NotImplementedException();
+      }
+    }
+
+    public string file_prefix
+    {
+      get
+      {
+        throw new NotImplementedException();
+      }
+    }
+
     public SelfOrganizingMap(int rows, int columns, int attr_count, INeighborhoodFunction neighborhoodFunction, ILearningRateFunction learningRateFunction, IMetric metric,
       bool useNormalizedValues = false)
     {

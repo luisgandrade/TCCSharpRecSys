@@ -19,7 +19,7 @@ namespace UnsupervisedLearning
         throw new ArgumentException("tag_relevances");
 
       this.movie = tag_relevances.Select(tr => tr.movie).Distinct().Single();
-      this.tag_relevances = tag_relevances;
+      this.tag_relevances = tag_relevances.OrderBy(tr => tr.tag.id).ToList();
     }
   }
 }

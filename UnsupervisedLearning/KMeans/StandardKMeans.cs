@@ -27,8 +27,30 @@ namespace UnsupervisedLearning.KMeans
     /// Instâncias associadas a um dos clusters existentes.
     /// </summary>
     internal IList<InstanceClustered> instances_clustered { get; private set; }
-    
-        
+
+    public string name
+    {
+      get
+      {
+        throw new NotImplementedException();
+      }
+    }
+
+    public string sub_dir
+    {
+      get
+      {
+        throw new NotImplementedException();
+      }
+    }
+
+    public string file_prefix
+    {
+      get
+      {
+        throw new NotImplementedException();
+      }
+    }
 
     public void train(IList<Instance> instances)
     {

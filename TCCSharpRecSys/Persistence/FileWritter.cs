@@ -43,74 +43,48 @@ namespace TCCSharpRecSys.Persistence
       file_path = filePath;
     }
 
-    public void log(string line)
+    public void log(string line, bool append)
     {
-      using(var writter = new StreamWriter(file_path + "log.txt", true))
+      using(var writter = new StreamWriter(file_path + "log.txt", append))
       {
         writter.WriteLine("@ " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + "- " + line);
       }
     }
 
-    public void writeAttributes(IList<Tag> attributes)
+    public void writeMovieClassifications(string sub_dir, string file_prefix, int instance, IList<IMovieClassification> moviesClassifications)
     {
-      var sb = new StringBuilder();
-      using(var writer = new StreamWriter(file_path + "attrs_" + attributes.Count + ".csv"))
-      {
-        foreach (var attribute in attributes)
-          writer.WriteLine(attribute.id + "," + attribute.tag + "," + attribute.population_average + "," + attribute.population_standard_deviation);
-      }
-      
-    }
+      if (sub_dir == null)
+        throw new ArgumentException("sub_dir");
+      if (file_prefix == null)
+        throw new ArgumentException("file_prefix");
+      if (moviesClassifications == null)
+        throw new ArgumentException("moviesClassifications");
 
+      if (!Directory.Exists(file_path + sub_dir + "\\classification"))
+        Directory.CreateDirectory(file_path + sub_dir + "\\classification");
 
-    public void writeMovieAttributes(IList<TagRelevance> movieAttrs, int attr_count)
-    {
-
-      using (var writer = new StreamWriter(file_path + "movie_attr_" + attr_count + ".csv"))
+      using (var writter = new StreamWriter(file_path + sub_dir + "\\classification\\" + file_prefix + "_" + instance + ".csv"))
       {
-        foreach (var movieAttr in movieAttrs)
-          writer.WriteLine(movieAttr.movie.id + "," + movieAttr.tag.id + "," + movieAttr.relevance + "," +
-                                (movieAttr.normalized_relevance.HasValue ? movieAttr.normalized_relevance.Value.ToString() : "null"));
-      }
-    }
-    
-    public void writeSOMClassification(SOMClassification som, IEnumerable<InstanceClassification> moviesAndNodes)
-    {
-      if (!Directory.Exists(file_path + "movie_classification"))
-        Directory.CreateDirectory(file_path + "movie_classification");
-      using (var writter = new StreamWriter(file_path + "movie_classification\\" + som.attr_count + "_" + som.rows + "_" + som.columns + "_" + (som.instance) + ".csv"))
-      {
-        foreach (var movie in moviesAndNodes)
-          writter.WriteLine(movie.instance_id + "," + movie.x + "," + movie.y);
+        foreach (var movieClassification in moviesClassifications)
+          writter.WriteLine(movieClassification.print());
       }
     }
 
-    public string writeSOMNodes(SelfOrganizingMap somAlg, string filePrefix)
+    public void writeTrainedAlgorithmInfo(string sub_dir, string file_prefix, int instance, IEnumerable<string> linesToWrite)
     {
-      if (!Directory.Exists(file_path + "som_nodes"))
-        Directory.CreateDirectory(file_path + "som_nodes");
-      var existingFilesInDirectory = Directory.GetFiles(file_path + "som_nodes\\");
-      var regex = new Regex(filePrefix + "_([0-9]*).csv");
-      var maxInstance = existingFilesInDirectory.Where(f => regex.IsMatch(f)).Select(f => int.Parse(regex.Match(f).Groups[1].Value)).DefaultIfEmpty(0).Max();
+      if (sub_dir == null)
+        throw new ArgumentException("sub_dir");
+      if (file_prefix == null)
+        throw new ArgumentException("file_prefix");
+      if (linesToWrite == null)
+        throw new ArgumentException("linesToWrite");
 
-      using (var writter = new StreamWriter(file_path + "som_nodes\\" + filePrefix + (maxInstance + 1) + ".csv"))
+      if (!Directory.Exists(file_path + sub_dir))
+        Directory.CreateDirectory(file_path + sub_dir);      
+      using (var writter = new StreamWriter(file_path + sub_dir + "\\" + file_prefix + "_" + instance + ".csv"))
       {
-        foreach (var line in somAlg.printNetwork())
+        foreach (var line in linesToWrite)
           writter.WriteLine(line);
-      }
-
-      return filePrefix + (maxInstance + 1) + ".csv";
-    }
-
-    public void writeSOMLabels(SOMClassification som, IList<NodeLabel> nodeLabels)
-    {
-      var labelCount = nodeLabels[0].labels.Count;
-      if (!Directory.Exists(file_path + "som_labels"))
-        Directory.CreateDirectory(file_path + "som_labels");
-      using (var writter = new StreamWriter(file_path + "som_labels\\" + som.attr_count + "_" + som.rows + "_" + som.columns + "_" + (som.instance) + "_" + labelCount + ".csv"))
-      {
-        foreach (var node in nodeLabels)
-          writter.WriteLine("[" + node.x + ";" + node.y + "],[" + node.labels.Aggregate((acc, l) => acc + ";" + l) +"]");
       }
     }
 
@@ -144,20 +118,20 @@ namespace TCCSharpRecSys.Persistence
       }
     }
     
-    public void writeClusters(IList<Cluster> clusters)
-    {
-      if (!Directory.Exists(file_path + "standard_k_means"))
-        Directory.CreateDirectory(file_path + "standard_k_means");
-      var existingFilesInDirectory = Directory.GetFiles(file_path + "standard_k_means\\");
-      var regex = new Regex(clusters.Count + "_([0-9]*).csv");
-      var maxInstance = existingFilesInDirectory.Where(f => regex.IsMatch(f)).Select(f => int.Parse(regex.Match(f).Groups[1].Value)).DefaultIfEmpty(0).Max();
+    //public void writeClusters(IList<Cluster> clusters)
+    //{
+    //  if (!Directory.Exists(file_path + "standard_k_means"))
+    //    Directory.CreateDirectory(file_path + "standard_k_means");
+    //  var existingFilesInDirectory = Directory.GetFiles(file_path + "standard_k_means\\");
+    //  var regex = new Regex(clusters.Count + "_([0-9]*).csv");
+    //  var maxInstance = existingFilesInDirectory.Where(f => regex.IsMatch(f)).Select(f => int.Parse(regex.Match(f).Groups[1].Value)).DefaultIfEmpty(0).Max();
 
-      using (var writter = new StreamWriter(file_path + "standard_k_means\\" + clusters.Count + "_" + (maxInstance + 1) + ".csv"))
-      {
-        foreach (var cluster in clusters)
-          writter.WriteLine(cluster.id + "," + cluster.centroid.Aggregate("", (acc, n) => acc + "," + n));
-      }
-    }
+    //  using (var writter = new StreamWriter(file_path + "standard_k_means\\" + clusters.Count + "_" + (maxInstance + 1) + ".csv"))
+    //  {
+    //    foreach (var cluster in clusters)
+    //      writter.WriteLine(cluster.id + "," + cluster.centroid.Aggregate("", (acc, n) => acc + "," + n));
+    //  }
+    //}
 
     // user_id, filmes recomendados com match, numero de filmes para treino
     public void writePrecision(IList<Tuple<int, int, int>> recomendacoesParUsuario)

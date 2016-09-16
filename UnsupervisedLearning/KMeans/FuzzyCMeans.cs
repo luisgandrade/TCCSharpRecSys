@@ -7,7 +7,7 @@ using Utils.Metric;
 
 namespace UnsupervisedLearning.KMeans
 {
-  public class FuzzyCMeans
+  public class FuzzyCMeans : IUnsupervisedLearning
   {
     /// <summary>
     /// Clusters gerados.
@@ -30,6 +30,30 @@ namespace UnsupervisedLearning.KMeans
     /// Critério de parada.
     /// </summary>
     internal double stop_criterion { get; private set; }
+
+    public string sub_dir
+    {
+      get
+      {
+        throw new NotImplementedException();
+      }
+    }
+
+    public string file_prefix
+    {
+      get
+      {
+        throw new NotImplementedException();
+      }
+    }
+
+    public string name
+    {
+      get
+      {
+        throw new NotImplementedException();
+      }
+    }
 
     public void cluster(IList<Instance> instances)
     {
@@ -89,8 +113,22 @@ namespace UnsupervisedLearning.KMeans
       }
     }
 
+    public void train(IList<Instance> instances)
+    {
+      throw new NotImplementedException();
+    }
 
-    public FuzzyCMeans(int n_clusters, double fuzzyness, int stop_criterion)
+    public IList<IMovieClassification> classify_instances(IList<Instance> tagRelevances)
+    {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<string> printClassifier()
+    {
+      throw new NotImplementedException();
+    }
+
+    public FuzzyCMeans(int n_clusters, double fuzzyness, double stop_criterion)
     {
       if (n_clusters < 2)
         throw new ArgumentOutOfRangeException("Número de clusters deve ser maior que 2.");

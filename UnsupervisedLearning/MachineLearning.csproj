@@ -44,7 +44,6 @@
     <Compile Include="IMovieClassification.cs" />
     <Compile Include="IClustering.cs" />
     <Compile Include="Instance.cs" />
-    <Compile Include="IRecommend.cs" />
     <Compile Include="KMeans\Cluster.cs" />
     <Compile Include="KMeans\FuzzyCMeans.cs" />
     <Compile Include="KMeans\InstanceClustered.cs" />

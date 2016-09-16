@@ -17,6 +17,10 @@ namespace UnsupervisedLearning
 
     IEnumerable<string> printClassifier();
 
+    string name { get; }
 
+    string sub_dir { get; }
+
+    string file_prefix { get; }
   }
 }

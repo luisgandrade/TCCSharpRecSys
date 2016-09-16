@@ -1,0 +1,1 @@
+train som r=10 c=10 mt=euclidian n=gaussian un=true
