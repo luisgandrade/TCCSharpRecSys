@@ -19,14 +19,14 @@ namespace TCCSharpRecSys.Persistence
 
     private static FileReader file_reader;
 
-    private static string file_path;
+    private static string dir_path;
     
     private FileReader()
     {
       movies_read = new List<Movie>();
       ratings_read = new List<Rating>();
       tags_read = new List<Tag>();
-      movie_classification_read = new List<MovieSOMClassification>();
+      movie_classification_read = new List<IMovieClassification>();
       tag_relevances_read = new List<TagRelevance>();
     }
 
@@ -37,19 +37,22 @@ namespace TCCSharpRecSys.Persistence
       return file_reader;
     }
 
-    public static void setFilePath(string filePath)
+    public static void setDirPath(string dirPath)
     {
-      if (filePath == null)
+      if (dirPath == null)
         throw new ArgumentException("filePath");
 
-      file_path = filePath;
+      if (!Directory.Exists(dirPath))
+        Directory.CreateDirectory(dirPath);
+
+      dir_path = dirPath;
     }
 
     private IList<Movie> movies_read;
     private IList<Rating> ratings_read;
     private IList<Tag> tags_read;
     private IList<TagRelevance> tag_relevances_read;
-    private IList<MovieSOMClassification> movie_classification_read;
+    private IList<IMovieClassification> movie_classification_read;
 
 
     public IList<int> existingInstances(string sub_dir, string file_prefix)
@@ -59,8 +62,8 @@ namespace TCCSharpRecSys.Persistence
       if (file_prefix == null)
         throw new ArgumentException("file_prefix");
 
-      var regex = new Regex(file_prefix + "([0-9]+)\\.csv");
-      var filesInSubDir = Directory.GetFiles(file_path + "\\" + file_prefix + "\\");
+      var regex = new Regex(file_prefix + "_([0-9]+)\\.csv");      
+      var filesInSubDir = Directory.GetFiles(dir_path + sub_dir + "\\train\\");
       var instances = new List<int>();
       foreach (var file in filesInSubDir)
       {
@@ -75,7 +78,7 @@ namespace TCCSharpRecSys.Persistence
     {
       if (movies_read.Any())
         return movies_read;
-      reader = new StreamReader(file_path + "movies.csv");
+      reader = new StreamReader(dir_path + "movies.csv");
 
       var movies = new List<Movie>();
 
@@ -101,14 +104,27 @@ namespace TCCSharpRecSys.Persistence
       return movies;
     }
 
-    public IList<Rating> readUserRatings()
+    public IList<int> getPartsOfRatings()
     {
-      if (ratings_read.Any())
-        return ratings_read;
+      var files = Directory.GetFiles(dir_path + "profiles");
+      var regex = new Regex("ratings_pt([0-9])+\\.csv");
+      var pts = new List<int>();
+      foreach (var file in files)
+      {
+        var match = regex.Match(file);
+        if (match.Success)
+          pts.Add(int.Parse(match.Groups[1].Value));
+      }
+      return pts;
+    }
+
+    public IList<Rating> readUserRatings(int chunk)
+    {      
       if (!movies_read.Any())
         readMovies();
-
-      reader = new StreamReader(file_path + "ratings.csv");
+      if (!File.Exists(dir_path + "profiles\\ratings_pt" + chunk + ".csv"))
+        throw new FileNotFoundException("Arquivo de ratings não existe.");
+      reader = new StreamReader(dir_path + "profiles\\ratings_pt" + chunk + ".csv");
 
       
       var ratingsInfo = new List<Tuple<int, int, double, DateTime>>();
@@ -137,7 +153,7 @@ namespace TCCSharpRecSys.Persistence
     {
       if (tags_read.Any())
         return tags_read;
-      reader = new StreamReader(file_path + "tags.csv");
+      reader = new StreamReader(dir_path + "tags.csv");
 
       var tags = new List<Tag>();
 
@@ -171,7 +187,7 @@ namespace TCCSharpRecSys.Persistence
         readTags();
       if (!movies_read.Any())
         readMovies();
-      reader = new StreamReader(file_path + "tag_relevance.csv");
+      reader = new StreamReader(dir_path + "tag_relevance.csv");
 
       
       var tagRelInfo = new List<Tuple<int, int, double, double>>();
@@ -205,67 +221,81 @@ namespace TCCSharpRecSys.Persistence
       return tagRelevances;
     }
 
-    public IList<MovieSOMClassification> readMovieClassification(SelfOrganizingMap som)
+    public IList<IMovieClassification> readMovieClassification(string algorithmDir, string filename, Func<Movie, string, IMovieClassification> classLabelParser)
     {
       if (movie_classification_read.Any())
         return movie_classification_read;
       if (!movies_read.Any())
         readMovies();
-      reader = new StreamReader(file_path + "movie_classification\\" + som.attr_count + "_" + som.rows + "_" + som.columns + "_" + som.instance +".csv");
+      reader = new StreamReader(dir_path + algorithmDir + "\\" + "movie_classification\\" + filename +".csv");
 
       
-      var instancesRead = new List<Tuple<int, int, int>>();
-
+      var moviesClassification = new List<IMovieClassification>();
+      var regex = new Regex("([0-9]+)\\s?,\\s?(.*)");
       while (!reader.EndOfStream)
       {
         var line = reader.ReadLine();
-        var properties = line.Split(',');
 
-        var movie_id = int.Parse(properties[0]);
-        var x = int.Parse(properties[1]);
-        var y = int.Parse(properties[2]);
+        var match = regex.Match(line);
+        if (!match.Success)
+          throw new InvalidOperationException("Não deu match.");
         
 
-        instancesRead.Add(new Tuple<int, int, int>(movie_id, x, y));
+        var movie_id = int.Parse(match.Groups[1].Value);
+        var classlabel = match.Groups[2].Value;
+
+        var movie = movies_read.Single(mr => mr.id == movie_id);
+
+        moviesClassification.Add(classLabelParser(movie, classlabel));
       }
 
       reader.Close();
       reader = null;
-
-      if (instancesRead.Count != movies_read.Count)
-        throw new InvalidOperationException("Tamanho da lista de classificação de filmes é diferente do tamanho da lista de filmes.");
-
-      var moviesClassification = instancesRead.Join(movies_read, ir => ir.Item1, mr => mr.id, (ir, mr) => new MovieSOMClassification(mr, som.getNeuron(ir.Item2, ir.Item3))).ToList();
-
+      
       movie_classification_read = moviesClassification;
       
 
       return moviesClassification;
     }
 
-    public IList<Tuple<int, int, List<double>>> existingNeurons(int rows, int columns, string metric, string neighborhood, int instance)
+    public IList<string> readAlgorithmConfig(string algorithmDir, string filename, int instance)
     {
-      reader = new StreamReader(file_path + "som_nodes\\" + rows + "_" + columns + "_" + metric + "_" + neighborhood + "_" + instance + ".csv"); ;
 
-      var nodes = new List<Tuple<int, int, List<double>>>();
+      reader = new StreamReader(dir_path + algorithmDir + "\\train_" + filename + "_" + instance + ".csv");
+      var classLabelsStr = new List<string>();
 
-      reader.ReadLine();
       while (!reader.EndOfStream)
-      {
-        var line = reader.ReadLine();
-        var split = line.Split(',');
+        classLabelsStr.Add(reader.ReadLine());
+      reader.Close();
+      reader = null;
 
-        var coordinates = split[0].Trim('[', ']').Split(';');
-
-        var nodesWeightsString = split[1].Trim('[', ']').Split(';');
-
-        var nodesWeights = nodesWeightsString.Select(nws => double.Parse(nws)).ToList();
-
-        nodes.Add(new Tuple<int, int, List<double>>(int.Parse(coordinates[0]), int.Parse(coordinates[1]), nodesWeights));
-      }
-
-      return nodes;
+      return classLabelsStr;
     }
+
+    //public IList<Tuple<int, int, List<double>>> existingNeurons(int rows, int columns, string metric, string neighborhood, int instance)
+
+    //{
+    //  reader = new StreamReader(dir_path + "som_nodes\\" + rows + "_" + columns + "_" + metric + "_" + neighborhood + "_" + instance + ".csv"); ;
+
+    //  var nodes = new List<Tuple<int, int, List<double>>>();
+
+    //  reader.ReadLine();
+    //  while (!reader.EndOfStream)
+    //  {
+    //    var line = reader.ReadLine();
+    //    var split = line.Split(',');
+
+    //    var coordinates = split[0].Trim('[', ']').Split(';');
+
+    //    var nodesWeightsString = split[1].Trim('[', ']').Split(';');
+
+    //    var nodesWeights = nodesWeightsString.Select(nws => double.Parse(nws)).ToList();
+
+    //    nodes.Add(new Tuple<int, int, List<double>>(int.Parse(coordinates[0]), int.Parse(coordinates[1]), nodesWeights));
+    //  }
+
+    //  return nodes;
+    //}
 
   }
 }

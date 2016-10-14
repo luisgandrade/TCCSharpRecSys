@@ -10,6 +10,7 @@ using UnsupervisedLearning.KMeans;
 using UnsupervisedLearning.SelfOrganizingMaps;
 using UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions;
 using UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions;
+using UnsupervisedLearning.SelfOrganizingMaps.Network;
 using Utils;
 using Utils.Metric;
 
@@ -23,7 +24,7 @@ namespace TCCSharpRecSys
       if (inputText == null)
         throw new ArgumentException("inputText");
 
-      var commandLines = inputText.Split('\n');
+      var commandLines = inputText.Split('\n').Where(cl => !string.IsNullOrWhiteSpace(cl)).Select(cl => cl.Trim());
 
       var firstLine = commandLines.First();
       var regex = new Regex("^set_dir (.*)$");
@@ -32,21 +33,22 @@ namespace TCCSharpRecSys
       if (!match.Success)
         throw new InvalidOperationException("A primeira linha deve necessariamente setar o diretório onde estão e serão salvos os arquivos que serão usados!");
 
-      var filePath = match.Groups[1].Value;
-      FileReader.setFilePath(filePath);
-      FileWritter.setFilePath(filePath);
+      var filePath = match.Groups[1].Value.Trim();
+      FileReader.setDirPath(filePath);
+      FileWritter.setDirPath(filePath);
 
-      var regexProfiles = new Regex("profiles ct=([0-9]+\\.[0-9]+)");
+      var regexProfiles = new Regex("profiles ct=([0-9]+\\.[0-9]+) (.*)");
 
       var commands = new List<Action>();
 
-      var matchBuildUserProfile = commandLines.Where(cl => regexProfiles.IsMatch(cl)).Select(cl => regexProfiles.Match(cl)).SingleOrDefault();
-      if(matchBuildUserProfile != null)
+      var matchBuildUserProfile = commandLines.Where(cl => regexProfiles.IsMatch(cl)).Select(cl => new { commandLine = cl, match = regexProfiles.Match(cl) } );
+      if(matchBuildUserProfile.Any())
       {
-        commands.Add(buildUserProfiles(double.Parse(matchBuildUserProfile.Groups[1].Value)));
+        commands.AddRange(matchBuildUserProfile.Select(mb => buildUserProfiles(double.Parse(mb.match.Groups[1].Value), mb.match.Groups[2].Value)));
+        
       }
 
-      commands.AddRange(commandLines.Select(cl => parseCommand(cl)).ToList());
+      commands.AddRange(commandLines.Skip(1).Except(matchBuildUserProfile.Select(mb => mb.commandLine)).Select(cl => parseCommand(cl)).ToList());
       return commands;
     }
 
@@ -55,7 +57,7 @@ namespace TCCSharpRecSys
       if (line == null)
         throw new ArgumentException("line");
 
-      var regex = new Regex("([a-z]*) (.*?) instances=([0-9]+),([0-9]+)");
+      var regex = new Regex("([a-z]*) (.*)");
 
       var match = regex.Match(line);
 
@@ -100,21 +102,28 @@ namespace TCCSharpRecSys
       return () =>
       {
         var instances = FileReader.getInstance().readTagRelevances()
-                                              .GroupBy(tr => tr.tag)
+                                              .GroupBy(tr => tr.movie)
                                               .Select(tr => new Instance(tr.ToList()))
                                               .ToList();
         var fileWritter = FileWritter.getInstance();
-        for (int i = firstInstance; i < lastInstance; i++)
+        for (int i = firstInstance; i <= lastInstance; i++)
         {
           var algorithm = algorithmGen();
           Console.WriteLine("Treinando algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i);
           fileWritter.log("Treinando algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i, true);
 
+          var start = DateTime.Now;
           algorithm.train(instances);
+          var end = DateTime.Now;
+
           fileWritter.writeTrainedAlgorithmInfo(algorithm.sub_dir, algorithm.file_prefix, i, algorithm.printClassifier());
 
-          Console.WriteLine("Finalizou treinamento do algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i);
-          fileWritter.log("Finalizou treinamento do algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i, true);
+          var execTime = end - start;
+
+          Console.WriteLine("Finalizou treinamento do algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i + ". Tempo de execução: " +
+            execTime.Hours + "h" + execTime.Minutes + "min");
+          fileWritter.log("Finalizou treinamento do algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i + ". Tempo de execução: " +
+            execTime.Hours + "h" + execTime.Minutes + "min", true);
 
         }
       };
@@ -145,27 +154,40 @@ namespace TCCSharpRecSys
       {
         var dummyAlg = algorithmGen();
         var exisingTrainedModels = FileReader.getInstance().existingInstances(dummyAlg.sub_dir, dummyAlg.file_prefix);
-        if (!exisingTrainedModels.OrderBy(etm => etm).SequenceEqual(Enumerable.Range(firstInstance, lastInstance - firstInstance)))
+        if(Enumerable.Range(firstInstance, lastInstance - firstInstance + 1).Except(exisingTrainedModels).Count() > 0)
           throw new InvalidOperationException("O comando deve classificar de acordo as instâncias de " + firstInstance + " até " + lastInstance + ". Porém, as " +
-            "seguintes instâncias não foram encontradas em disco: " + string.Join(",", exisingTrainedModels.ToArray()));
-        
-        var instances = FileReader.getInstance().readTagRelevances()
-                                              .GroupBy(tr => tr.tag)
-                                              .Select(tr => new Instance(tr.ToList()))
-                                              .ToList();
+            "seguintes instâncias não foram encontradas em disco: " + 
+            string.Join(",", Enumerable.Range(firstInstance, lastInstance - firstInstance + 1).Except(exisingTrainedModels).ToArray()));
+
         var fileWritter = FileWritter.getInstance();
-        for (int i = firstInstance; i < lastInstance; i++)
+        var fileReader = FileReader.getInstance();
+
+        var instances = fileReader.readTagRelevances()
+                                  .GroupBy(tr => tr.movie)
+                                  .Select(tr => new Instance(tr.ToList()))
+                                  .ToList();        
+        
+        for (int i = firstInstance; i <= lastInstance; i++)
         {
           var algorithm = algorithmGen();
+          var algorithmConfig = fileReader.readAlgorithmConfig(algorithm.sub_dir, algorithm.file_prefix, i);
+          algorithm.parse_classifier(algorithmConfig);
+
           Console.WriteLine("Classificando filmes com algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i);
           fileWritter.log("Classificando filmes com algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i, true);
 
+          var start = DateTime.Now;
           var movieClassifications = algorithm.classify_instances(instances);
+          var end = DateTime.Now;
+
           fileWritter.writeMovieClassifications(algorithm.sub_dir, algorithm.file_prefix, i, movieClassifications);
+          
+          var execTime = end - start;
 
-          Console.WriteLine("Finalizou classificação com algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i);
-          fileWritter.log("Finalizou classificação com algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i, true);
-
+          Console.WriteLine("Finalizou classificação com algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i + ". Tempo de execução: " + 
+            execTime.Hours + "h" + execTime.Minutes + "min");
+          fileWritter.log("Finalizou classificação com algoritmo " + algorithm.name + ". Config: " + algorithm.file_prefix + ". Instância: " + i + ". Tempo de execução: " +
+            execTime.Hours + "h" + execTime.Minutes + "min", true);
         }
       };
     }
@@ -173,12 +195,82 @@ namespace TCCSharpRecSys
     private Action recommend(string args)
     {
 
-      throw new NotImplementedException();
+      if (args == null)
+        throw new ArgumentException("args");
+
+      var regex = new Regex("(.*?) instances=([1-9]+),([1-9]+) (.+)");
+
+      var match = regex.Match(args);
+
+      if (!match.Success)
+        throw new InvalidOperationException("Não foi possível parsear para classificação.");
+
+      var algorithmInfo = match.Groups[1].Value;
+      var firstInstance = int.Parse(match.Groups[2].Value);
+      var lastInstance = int.Parse(match.Groups[3].Value);
+      var userProfilesFile = int.Parse(match.Groups[4].Value);
+
+      if (firstInstance > lastInstance)
+        throw new ArgumentOutOfRangeException("O limite inferior do range é maior que o limite superior.");
+
+      var algorithmGen = parseAlgorithm(algorithmInfo);
+
+      return () =>
+      {
+        var dummyAlg = algorithmGen();
+        var exisingTrainedModels = FileReader.getInstance().existingInstances(dummyAlg.sub_dir, dummyAlg.file_prefix);
+        if (!exisingTrainedModels.OrderBy(etm => etm).SequenceEqual(Enumerable.Range(firstInstance, lastInstance - firstInstance)))
+          throw new InvalidOperationException("O comando deve classificar de acordo as instâncias de " + firstInstance + " até " + lastInstance + ". Porém, as " +
+            "seguintes instâncias não foram encontradas em disco: " + string.Join(",", exisingTrainedModels.ToArray()));
+
+      };
     }
 
-    private Action buildUserProfiles(double cutoff)
+    private Action buildUserProfiles(double cutoff, string decay)
     {
-      throw new NotImplementedException();
+      if(cutoff <= 0 || cutoff >= 1)
+        throw new ArgumentOutOfRangeException("O cutoff deve ser um valor maior que zero e menor que um.");
+      if (decay == null)
+        throw new ArgumentException("decay");
+
+      IDecayFormula decayFormula = null;
+      switch (decay)
+      {
+        case "exp":
+          decayFormula = new ExponentialDecay();
+          break;
+        case "linear":
+          decayFormula = new LinearDecay();
+          break;
+        default:
+          throw new InvalidOperationException("Forma de decay das avaliações não existe.");
+      }
+      return () =>
+      {
+        var fileReader = FileReader.getInstance();
+        var tagRelevances = fileReader.readTagRelevances();        
+
+        var userProfileBuilder = new UserProfileBuilder(decayFormula);
+        var fileWritter = FileWritter.getInstance();
+
+        Console.WriteLine("Construindo perfis de usuários. Porcentagem de corte: " + cutoff + ". Decaimento: " + decayFormula.decay_display);
+        fileWritter.log("Construindo perfis de usuários. Porcentagem de corte: " + cutoff + ". Decaimento: " + decayFormula.decay_display, true);
+        var start = DateTime.Now;
+        var pts = fileReader.getPartsOfRatings();
+        foreach (var pt in pts)
+        {          
+          var ratings = fileReader.readUserRatings(pt);          
+          var userProfiles =  userProfileBuilder.buildUserProfiles(ratings, tagRelevances, cutoff);
+          Console.WriteLine("Escrevendo perfis dos usuários... [" + ((pt - 1) * 20000) + " a " + (pt * 20000 - 1) + "]");
+          fileWritter.appendUserProfiles(decayFormula.decay_display + "_" + cutoff + "_" + "pt" + pt + ".csv", userProfiles);
+          userProfiles = null;
+        }
+        var end = DateTime.Now;
+        var duration = end - start;
+        Console.WriteLine("Construção de perfis de usuários finalizada. Porcentagem de corte: " + cutoff + ". Decaimento: " + decayFormula.decay_display + ". Tempo de execução: " + duration.TotalHours + "h" + duration.TotalMinutes + "min");
+        fileWritter.log("Construção de perfis de usuários finalizada. Porcentagem de corte: " + cutoff + ". Decaimento: " + decayFormula.decay_display + ". Tempo de execução: " + duration.TotalHours + "h" + duration.TotalMinutes + "min", true);
+      };
+      
     }
 
     private Func<IUnsupervisedLearning> parseAlgorithm(string algorithmInfo)
@@ -197,12 +289,10 @@ namespace TCCSharpRecSys
       {
         case "som":
           return som(args);
-        case "k-means":
+        case "kmeans":
           return kMeans(args);
-        case "c-means":
+        case "cmeans":
           return cMeans(args);
-        case "boltzman-machine":
-          return boltzman(args);
         default:
           throw new NotSupportedException("Algoritmo de treinamento \"" + algorithmName + "\" não encontrado");
       }
@@ -267,7 +357,7 @@ namespace TCCSharpRecSys
 
     private Func<IUnsupervisedLearning> kMeans(string args)
     {
-      var regex = new Regex("cl=([0-9]+)");
+      var regex = new Regex("cl=([0-9]+) un=(true|false)");
 
       var match = regex.Match(args);
 
@@ -275,31 +365,27 @@ namespace TCCSharpRecSys
         throw new InvalidOperationException("Não foi possível parsear os argumentos do K-Means padrão.");
 
       var clusterCount = int.Parse(match.Groups[1].Value);
-      var kMeans = new StandardKMeans(clusterCount);
-      return () => kMeans;
+      var useNormalizedValues = match.Groups[1].Value == "true";
+      return () => new StandardKMeans(clusterCount, useNormalizedValues);
     }
 
-    private Func<IUnsupervisedLearning> cMeans(string args)
-    {
-      var regex = new Regex("cl=([0-9]+) fz=([0-9]+\\.[0-9]+) st=([0-9]+\\.[0-9]+)");
+    //private Func<IUnsupervisedLearning> cMeans(string args)
+    //{
+    //  var regex = new Regex("cl=([0-9]+) fz=([0-9]+\\.[0-9]+) st=([0-9]+\\.[0-9]+) un=(true|false)");
 
-      var match = regex.Match(args);
+    //  var match = regex.Match(args);
 
-      if (!match.Success)
-        throw new InvalidOperationException("Não foi possível parsear os argumentos do Fuzzy C-Means.");
+    //  if (!match.Success)
+    //    throw new InvalidOperationException("Não foi possível parsear os argumentos do Fuzzy C-Means.");
 
-      var clusterCount = int.Parse(match.Groups[1].Value);
-      var fuzzynessCoefficient = double.Parse(match.Groups[2].Value);
-      var stopCriterion = double.Parse(match.Groups[3].Value);
+    //  var clusterCount = int.Parse(match.Groups[1].Value);
+    //  var fuzzynessCoefficient = double.Parse(match.Groups[2].Value);
+    //  var stopCriterion = double.Parse(match.Groups[3].Value);
+    //  var useNormalizedValues = match.Groups[1].Value == "true";
 
-      var cMeans = new FuzzyCMeans(clusterCount, fuzzynessCoefficient, stopCriterion);
+    //  var cMeans = new FuzzyCMeans(clusterCount, fuzzynessCoefficient, stopCriterion, useNormalizedValues);
 
-      return () => cMeans;
-    }
-
-    private Func<IUnsupervisedLearning> boltzman(string args)
-    {
-      throw new NotImplementedException();
-    }    
+    //  return () => cMeans;
+    //}
   }
 }

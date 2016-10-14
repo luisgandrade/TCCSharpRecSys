@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnsupervisedLearning.SelfOrganizingMaps.Network;
 
@@ -18,8 +19,20 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions
   {
 
     private double initial_neighborhood_width;
-    private double time_constant;    
-    
+    private double time_constant;
+
+    private string _print;
+
+    public string print
+    {
+      get
+      {
+        if(string.IsNullOrWhiteSpace(_print))
+          _print = "gaussian_" + initial_neighborhood_width + "_" + time_constant;
+        return _print;
+      }
+    }
+
     public double apply(Neuron bmu, Neuron neighbor, int iteration)
     {
       if (bmu == null)

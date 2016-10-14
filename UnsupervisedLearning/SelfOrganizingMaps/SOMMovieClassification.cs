@@ -5,24 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Lib;
 using UnsupervisedLearning.SelfOrganizingMaps.Network;
+using UnsupervisedLearning.KMeans;
 
 namespace UnsupervisedLearning.SelfOrganizingMaps
 {
-  public class MovieSOMClassification : IMovieClassification
+  public class SOMMovieClassification : IMovieClassification
   {
     public Movie movie { get; set; }
 
     public Neuron neuron { get; set; }
-
-    public IClassLabel class_label
-    {
-      get
-      {
-        return neuron;
-      }
-    }    
-
-    public MovieSOMClassification(Movie movie, Neuron neuron)
+    
+    public SOMMovieClassification(Movie movie, Neuron neuron)
     {
       if (movie == null)
         throw new ArgumentException("movie");
@@ -34,7 +27,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
 
     public string print()
     {
-      throw new NotImplementedException();
+      return movie.id + "," + neuron.x + "," + neuron.y;
     }
   }
 }

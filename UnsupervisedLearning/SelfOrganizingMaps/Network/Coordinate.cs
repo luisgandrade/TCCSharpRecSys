@@ -21,10 +21,5 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
       this.x = x;
       this.y = y;
     }    
-
-    public bool Equals(Coordinate other)
-    {
-      throw new NotImplementedException();
-    }
   }
 }

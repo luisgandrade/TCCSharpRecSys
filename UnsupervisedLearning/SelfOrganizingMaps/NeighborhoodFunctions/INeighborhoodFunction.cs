@@ -18,5 +18,6 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions
     /// <returns>distancia entre neurônios <paramref name="bmu"/> e <paramref name="neighbor"/></returns>
     double apply(Neuron bmu, Neuron neighbor, int iteration);
 
+    string print { get; }
   }
 }

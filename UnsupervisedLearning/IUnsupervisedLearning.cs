@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnsupervisedLearning;
+using UnsupervisedLearning.KMeans;
 
 namespace UnsupervisedLearning
 {
@@ -13,9 +14,15 @@ namespace UnsupervisedLearning
 
     void train(IList<Instance> instances);
 
-    IList<IMovieClassification> classify_instances(IList<Instance> tagRelevances);
+    IEnumerable<IMovieClassification> classify_instances(IList<Instance> instances);
+
+    IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile);
 
     IEnumerable<string> printClassifier();
+
+    Func<Movie, string, IMovieClassification> parse_movie_classification();
+
+    void parse_classifier(IList<string> classLabelConfig);
 
     string name { get; }
 

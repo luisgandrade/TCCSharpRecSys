@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions;
 using UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions;
@@ -20,6 +21,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
     private Network.Network network;
     private INeighborhoodFunction neighborhood_function;
     private ILearningRateFunction learning_rate_function;
+    private IMetric metric;
     public int maxIterations;
     private bool useNormalizedValues;
 
@@ -59,7 +61,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
     {
       get
       {
-        throw new NotImplementedException();
+        return "SOM";
       }
     }
 
@@ -67,7 +69,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
     {
       get
       {
-        throw new NotImplementedException();
+        return "som";
       }
     }
 
@@ -75,36 +77,12 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
     {
       get
       {
-        throw new NotImplementedException();
+        return rows + "_" + columns + "_" + metric.print + "_" + neighborhood_function.print + "_" + learning_rate_function.print + (useNormalizedValues ? "t" : "f");
       }
     }
-
-    public SelfOrganizingMap(int rows, int columns, int attr_count, INeighborhoodFunction neighborhoodFunction, ILearningRateFunction learningRateFunction, IMetric metric,
-      bool useNormalizedValues = false)
-    {
-      if (neighborhoodFunction == null)
-        throw new ArgumentException("neighborhoodFunction");
-      if (learningRateFunction == null)
-        throw new ArgumentException("learningRateFunction");
-
-      network = new Network.Network(rows, columns, attr_count, metric);
-      neighborhood_function = neighborhoodFunction;
-      learning_rate_function = learningRateFunction;
-      maxIterations = 1000 + rows * columns * 500;
-      this.useNormalizedValues = useNormalizedValues;
-    }
-
-    public SelfOrganizingMap(int rows, int columns, int attr_count, int instance, IMetric metric, IEnumerable<Tuple<int, int, List<double>>> existingNeurons, 
-      bool useNormalizedValues = true)
-    {
-      this.network = new Network.Network(rows, columns, attr_count, instance, metric, existingNeurons);
-      this.useNormalizedValues = useNormalizedValues;
-    }
-
+    
     private bool iterate(IList<TagRelevance> instanceAttributes, int iteration)
-    {      
-      if (useNormalizedValues && instanceAttributes.Any(ia => !ia.normalized_relevance.HasValue))
-        throw new InvalidOperationException("Algoritmo está setado para usar valores normalizados, porém. algum valor normalizado não foi informado.");
+    { 
       IList<double> values = null;
       if (useNormalizedValues)
         values = instanceAttributes.Select(ia => ia.normalized_relevance.Value).ToList();
@@ -128,11 +106,14 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
       return new[] { header }.Concat(network.printNetwork());
     }
 
-    public IList<IMovieClassification> classify_instances<Neuron>(IList<Instance> instances)
+    public IEnumerable<IMovieClassification> classify_instances(IList<Instance> instances)
     {
-      return instances.Select(i => new MovieSOMClassification(i.movie,
-        network.classifyInstance(i.tag_relevances.OrderBy(tr => tr.tag.id).Select(tr => useNormalizedValues ? tr.normalized_relevance.Value : tr.relevance).ToList()).First()))
-                      .Cast<IMovieClassification>().ToList();
+      return instances.Select(i => new SOMMovieClassification(i.movie, network.classifyInstance(i.getRelevances(useNormalizedValues)).First())).Cast<IMovieClassification>().ToList();
+    }
+
+    public IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile)
+    {
+      return network.classifyInstance(userProfile.profile).Cast<IClassLabel>().ToList();
     }
 
     public void train(IList<Instance> instances)
@@ -148,6 +129,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
           instances.Shuffle();
 
         stop = iterate(instances[iteration % instances.Count].tag_relevances, iteration);
+        iteration++;
       }      
     }
 
@@ -156,9 +138,84 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
       return network.printNetwork();
     }
 
-    public IList<IMovieClassification> classify_instances(IList<Instance> tagRelevances)
+    public Func<Movie, string, IMovieClassification> parse_movie_classification()
     {
-      throw new NotImplementedException();
+      return (movie, str) =>
+      {
+        var coordinates = str.Split(',');
+        var x = int.Parse(coordinates[0]);
+        var y = int.Parse(coordinates[1]);
+
+        return new SOMMovieClassification(movie, network.neurons[x][y]);
+      };
     }
+
+    public void parse_classifier(IList<string> classLabelConfig)
+    {
+      var configPattern = new Regex("\\[(.*)\\],\\[(.*)\\]");
+      foreach (var neuron in classLabelConfig)
+      {
+        var match = configPattern.Match(neuron);
+        if (!match.Success)
+          throw new InvalidOperationException("Não deu match.");
+
+        var coordinates = match.Groups[1].Value.Split(';');
+        var weights = match.Groups[2].Value.Split(';');
+
+        var x = int.Parse(coordinates[0]);
+        var y = int.Parse(coordinates[1]);
+        var parsedWeights = weights.Select(w => double.Parse(w));
+        network.neurons[x][y] = new Neuron(x, y, parsedWeights.ToList());
+      }
+    }
+
+    public SelfOrganizingMap(int rows, int columns, int attr_count, INeighborhoodFunction neighborhoodFunction, ILearningRateFunction learningRateFunction, IMetric metric,
+      bool useNormalizedValues = false)
+    {
+      if (neighborhoodFunction == null)
+        throw new ArgumentException("neighborhoodFunction");
+      if (learningRateFunction == null)
+        throw new ArgumentException("learningRateFunction");
+
+      network = new Network.Network(rows, columns, attr_count, metric);
+      neighborhood_function = neighborhoodFunction;
+      learning_rate_function = learningRateFunction;
+      this.metric = metric;
+      maxIterations = 1000 + rows * columns * 500;
+      this.useNormalizedValues = useNormalizedValues;
+    }
+
+
+    //public SelfOrganizingMap(int rows, int columns, int attr_count, INeighborhoodFunction neighborhoodFunction, ILearningRateFunction learningRateFunction, IMetric metric,
+    //  IList<string> networkConfig, bool useNormalizedValues = false)
+    //{
+    //  if (neighborhoodFunction == null)
+    //    throw new ArgumentException("neighborhoodFunction");
+    //  if (learningRateFunction == null)
+    //    throw new ArgumentException("learningRateFunction");
+
+    //  network = new Network.Network(rows, columns, attr_count, metric, false);
+    //  neighborhood_function = neighborhoodFunction;
+    //  learning_rate_function = learningRateFunction;
+    //  this.metric = metric;
+    //  maxIterations = 1000 + rows * columns * 500;
+    //  this.useNormalizedValues = useNormalizedValues;
+    //  var configPattern = new Regex("\\[(.*)\\]),\\[(.*)\\]");
+    //  foreach (var neuron in networkConfig)
+    //  {
+    //    var match = configPattern.Match(neuron);
+    //    if (!match.Success)
+    //      throw new InvalidOperationException("Não deu match.");
+
+    //    var coordinates = match.Groups[1].Value.Split(';');
+    //    var weights = match.Groups[2].Value.Split(';');
+
+    //    var x = int.Parse(coordinates[0]);
+    //    var y = int.Parse(coordinates[1]);
+    //    var parsedWeights = weights.Select(w => double.Parse(w));
+    //    network.neurons[x][y] = new Neuron(x, y, parsedWeights.ToList());
+    //  }
+    //}
+
   }
 }

@@ -17,5 +17,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions
     /// </summary>
     /// <returns>taxa de aprendizado na iteração <paramref name="iteration"/></returns>
     double apply(int iteration);
+
+    string print { get; }
   }
 }

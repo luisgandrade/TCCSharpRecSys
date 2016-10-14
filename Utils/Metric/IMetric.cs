@@ -9,5 +9,7 @@ namespace Utils.Metric
   public interface IMetric
   {
     double applyMetric(IList<double> first, IList<double> second);
+
+    string print { get; }
   }
 }

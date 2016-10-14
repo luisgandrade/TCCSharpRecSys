@@ -9,9 +9,7 @@ namespace UnsupervisedLearning
 {
   public interface IMovieClassification
   {
-    Movie movie { get; }
-
-    IClassLabel class_label { get; }
+    Movie movie { get; }   
 
     string print();
   }

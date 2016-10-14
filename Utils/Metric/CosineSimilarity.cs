@@ -11,6 +11,14 @@ namespace Utils.Metric
   /// </summary>
   public class CosineSimilarity : IMetric
   {
+    public string print
+    {
+      get
+      {
+        return "cosine";
+      }
+    }
+
     public double applyMetric(IList<double> first, IList<double> second)
     {
       if (first == null)

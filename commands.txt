@@ -1,1 +1,3 @@
-train som r=10 c=10 mt=euclidian n=gaussian un=true
+set_dir C:\Users\luis\Documents\Projetos\tccsharprecsys\Data\
+profiles ct=0.5 exp
+profiles ct=0.5 linear

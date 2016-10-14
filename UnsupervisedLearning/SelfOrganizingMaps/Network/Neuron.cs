@@ -10,7 +10,9 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
   /// </summary>
   public class Neuron : IClassLabel
   {
-    internal Coordinate coordinates { get; private set; }
+    internal int x { get; private set; }
+
+    internal int y { get; private set; }
     /// <summary>
     /// Pesos nas entradas desse neurônio. 
     /// </summary>
@@ -22,7 +24,8 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
         throw new ArgumentException("weights");
             
       this.weights = weights;
-      this.coordinates = new Coordinate(x, y);
+      this.x = x;
+      this.y = y;
     }
 
     /// <summary>
@@ -50,7 +53,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
 
     internal double distance(Neuron other)
     {
-      return EuclidianDistance.distance(new List<double> { this.coordinates.x, this.coordinates.y }, new List<double> { other.coordinates.x, other.coordinates.y });
+      return EuclidianDistance.distance(new List<double> { this.x, this.y }, new List<double> { other.x, other.y });
     }
 
     public override string ToString()
@@ -60,14 +63,14 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
       for (int i = 1; i < weights.Count; i++)
         sb.Append(";" + weights[i]);
       sb.Append("]");
-      return string.Format("[{0};{1}],{2}", coordinates.x, coordinates.y, sb.ToString());
+      return string.Format("[{0};{1}],{2}", x, y, sb.ToString());
     }
 
     public bool Equals(Neuron other)
     {
       if (other == null)
         return false;
-      return this.coordinates.x == other.coordinates.x && this.coordinates.y == other.coordinates.y; 
+      return this.x == other.x && this.y == other.y; 
     }
   }
 }

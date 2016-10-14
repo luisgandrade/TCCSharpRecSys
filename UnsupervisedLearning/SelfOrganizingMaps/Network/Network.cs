@@ -62,43 +62,6 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
       }
     }
 
-    internal Network(int rows, int columns, int attr_count, int instance, IMetric metric, IEnumerable<Tuple<int, int, List<double>>> existingNeurons)      
-    {
-      this.rows = rows;
-      this.columns = columns;
-      this.attr_count = attr_count;
-      this.metric = metric;
-      neurons = new Neuron[rows][];
-      for (int i = 0; i < rows; i++)
-        neurons[i] = new Neuron[columns];
-
-      this.instance = instance;
-      foreach (var existingNeuron in existingNeurons)
-      {
-        if (existingNeuron.Item1 > rows - 1 || existingNeuron.Item1 < 0 || existingNeuron.Item2 > columns - 1 || existingNeuron.Item2 < 0)
-          throw new IndexOutOfRangeException("Coordenadas fora do intervalo. rows: " + rows + ", columns: " + columns + ", x: " + existingNeuron.Item1 + ", y: " + existingNeuron.Item2);
-        if (existingNeuron.Item3.Count != attr_count)
-          throw new InvalidOperationException("Tamanho do vetor de pesos != attr_count");
-        neurons[existingNeuron.Item1][existingNeuron.Item2] = new Neuron(existingNeuron.Item1, existingNeuron.Item2, existingNeuron.Item3);
-      }
-    }
-
-    internal Network(Network network)      
-    {
-      this.rows = network.rows;
-      this.columns = network.columns;
-      this.attr_count = network.attr_count;
-      this.metric = network.metric;
-      neurons = new Neuron[rows][];
-      for (int i = 0; i < rows; i++)
-        neurons[i] = new Neuron[columns];
-
-      this.instance = network.instance;
-      for (int i = 0; i < rows; i++)
-        for (int j = 0; j < columns; j++)
-          neurons[i][j] = new Neuron(network.neurons[i][j].coordinates.x, network.neurons[i][j].coordinates.y, network.neurons[i][j].weights);      
-    }
-
     /// <summary>
     /// Encontra a best matching unit (BMU). A BMU é o neurônio cujos pesos estão mais próximos dos valores de atributos
     /// da instancia <paramref name="instanceAttributes"/> apresentada à rede. Essa distância é calculada usando a distância

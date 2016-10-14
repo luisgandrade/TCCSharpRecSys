@@ -8,6 +8,6 @@ namespace UnsupervisedLearning
 {
   public interface IClassLabel
   {
-    //string class_label { get; }
+    
   }
 }

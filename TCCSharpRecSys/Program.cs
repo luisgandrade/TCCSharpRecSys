@@ -23,54 +23,56 @@ namespace TCCSharpRecSys
       if (args.Count() == 0)
         throw new InvalidOperationException("Args faltando.");
 
-      try
+      //try
+      //{
+
+      var cli = new CommandLineParser();
+      var act = cli.parseCommands(File.ReadAllText(args[0]));
+
+      foreach (var a in act)
       {
-
-        var cli = new CommandLineParser();
-        var act = cli.parseCommands(File.ReadAllText(args[0]));
-
-        foreach (var a in act)
-        {
-          a.Invoke();
-        }
-
-        Console.ReadKey();
-        //var fileReader = FileReader.getInstance();
-        //var movieClassification = fileReader.readMovieClassification(1128, 20, 20, 2);
-        //Console.WriteLine("Lendo filmes");
-        //var movies = fileReader.readMovies();
-        //Console.WriteLine("Agrupando filmes");
-        
-        //Console.WriteLine("Construindo SOM Class");
-        //var somNodes = fileReader.existingNeurons(1128, 20, 20, 6);
-        //var som = new SOMClassification(20, 20, 1128, 2, new EuclidianDistance(), somNodes, true);
-        //var classificationsGrouped = som.groupMovies(movieClassification, movies);
-                                        
-        //var recommender = new Recommender<Neuron>(som, classificationsGrouped, 50);
-        //Console.WriteLine("Construindo perfis de usuários.");
-        //buildUserProfiles(args[0]);
-        //Console.WriteLine("Reading movies...");
-
-        //var instances = fileReader.readTagRelevances().GroupBy(tr => tr.movie).Select(tr => new Instance(tr.ToList()));
-
-        //var kMeans = new StandardKMeans(instances.Take(100).ToList());
-        //kMeans.cluster(instances.ToList());
-        //var fileWritter = new FileWritter(args[0]);
-        //fileWritter.writeClusters(kMeans.clusters);
-        //var attr_counts = createAttributes(movies);
-        //buildUserProfiles();
-        //trainSOM();
-        //classify();
-        //labelNodes();
-
+        a.Invoke();
       }
-      catch (Exception e)
-      {
-        Console.WriteLine(e.InnerException);
-        Console.WriteLine(e.Message);
-        Console.WriteLine(e.StackTrace);
-        Console.ReadKey();
-      }
+
+      Console.ReadKey();
+
+
+      //var fileReader = FileReader.getInstance();
+      //var movieClassification = fileReader.readMovieClassification(1128, 20, 20, 2);
+      //Console.WriteLine("Lendo filmes");
+      //var movies = fileReader.readMovies();
+      //Console.WriteLine("Agrupando filmes");
+
+      //Console.WriteLine("Construindo SOM Class");
+      //var somNodes = fileReader.existingNeurons(1128, 20, 20, 6);
+      //var som = new SOMClassification(20, 20, 1128, 2, new EuclidianDistance(), somNodes, true);
+      //var classificationsGrouped = som.groupMovies(movieClassification, movies);
+
+      //var recommender = new Recommender<Neuron>(som, classificationsGrouped, 50);
+      //Console.WriteLine("Construindo perfis de usuários.");
+      //buildUserProfiles(args[0]);
+      //Console.WriteLine("Reading movies...");
+
+      //var instances = fileReader.readTagRelevances().GroupBy(tr => tr.movie).Select(tr => new Instance(tr.ToList()));
+
+      //var kMeans = new StandardKMeans(instances.Take(100).ToList());
+      //kMeans.cluster(instances.ToList());
+      //var fileWritter = new FileWritter(args[0]);
+      //fileWritter.writeClusters(kMeans.clusters);
+      //var attr_counts = createAttributes(movies);
+      //buildUserProfiles();
+      //trainSOM();
+      //classify();
+      //labelNodes();
+
+      //}
+      //catch (Exception e)
+      //{
+      //  Console.WriteLine(e.InnerException);
+      //  Console.WriteLine(e.Message);
+      //  Console.WriteLine(e.StackTrace);
+      //  Console.ReadKey();
+      //}
     }
     
 
@@ -213,3 +215,4 @@ namespace TCCSharpRecSys
   //  }
   }
 }
+

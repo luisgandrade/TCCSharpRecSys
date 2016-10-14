@@ -7,7 +7,7 @@ using UnsupervisedLearning;
 
 namespace UnsupervisedLearning.KMeans
 {
-  public class Cluster : IClassLabel
+  public class Cluster
   {
     public int id { get; private set; }
 
@@ -41,6 +41,6 @@ namespace UnsupervisedLearning.KMeans
       if (other == null)
         return false;
       return this.id == other.id;
-    }
+    }    
   }
 }

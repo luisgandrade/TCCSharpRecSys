@@ -48,13 +48,15 @@
     <Compile Include="KMeans\FuzzyCMeans.cs" />
     <Compile Include="KMeans\InstanceClustered.cs" />
     <Compile Include="KMeans\InstanceFuzzyClustered.cs" />
+    <Compile Include="KMeans\KMeansMovieClassification.cs" />
     <Compile Include="KMeans\StandardKMeans.cs" />
     <Compile Include="SelfOrganizingMaps\InstanceClassification.cs" />
     <Compile Include="IUnsupervisedLearning.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SelfOrganizingMaps\LearningRateFunctions\ILearningRateFunction.cs" />
     <Compile Include="SelfOrganizingMaps\LearningRateFunctions\LearningRateFunction.cs" />
-    <Compile Include="SelfOrganizingMaps\MovieSOMClassification.cs" />
+    <Compile Include="SelfOrganizingMaps\NeighborhoodFunctions\LinearNeighborhood.cs" />
+    <Compile Include="SelfOrganizingMaps\SOMMovieClassification.cs" />
     <Compile Include="SelfOrganizingMaps\NeighborhoodFunctions\GaussianNeighborhood.cs" />
     <Compile Include="SelfOrganizingMaps\NeighborhoodFunctions\INeighborhoodFunction.cs" />
     <Compile Include="SelfOrganizingMaps\Network\Coordinate.cs" />
@@ -62,9 +64,11 @@
     <Compile Include="SelfOrganizingMaps\Network\Neuron.cs" />
     <Compile Include="SelfOrganizingMaps\NodeLabel.cs" />
     <Compile Include="SelfOrganizingMaps\SelfOrganizingMap.cs" />
-    <Compile Include="SelfOrganizingMaps\SOMClassification.cs" />
     <Compile Include="UserProfile.cs" />
-    <Compile Include="UserProfileBuilder.cs" />
+    <Compile Include="UserProfiles\ExponentialDecay.cs" />
+    <Compile Include="UserProfiles\IDecayFormula.cs" />
+    <Compile Include="UserProfiles\LinearDecay.cs" />
+    <Compile Include="UserProfiles\UserProfileBuilder.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

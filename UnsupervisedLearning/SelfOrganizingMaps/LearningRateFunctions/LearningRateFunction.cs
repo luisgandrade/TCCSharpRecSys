@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions
@@ -29,7 +30,19 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions
     /// Iteração em que o algoritmo passará da fase de ordenação para a fase de convergência.
     /// </summary>
     private int advance_phase_threshold;
-    
+
+    private string _print;
+
+    public string print
+    {
+      get
+      {
+        if(string.IsNullOrWhiteSpace(_print))
+          _print = "lr_" + initial_learning_rate + time_constant;
+        return _print;
+      }
+    }
+
     public double apply(int iteration)
     {
       if (iteration > advance_phase_threshold)

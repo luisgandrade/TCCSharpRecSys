@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Lib;
 using Utils.Metric;
 using Utils;
+using UnsupervisedLearning;
 
 namespace UnsupervisedLearning.KMeans
 {
@@ -17,12 +18,14 @@ namespace UnsupervisedLearning.KMeans
   {
 
     public int cluster_count { get; private set; }
+
+    public bool use_normalized_values { get; private set; }
     /// <summary>
     /// Clusters gerados.
     /// </summary>
     public IList<Cluster> clusters { get; private set; }
 
-    
+
     /// <summary>
     /// Instâncias associadas a um dos clusters existentes.
     /// </summary>
@@ -32,7 +35,7 @@ namespace UnsupervisedLearning.KMeans
     {
       get
       {
-        throw new NotImplementedException();
+        return "K-Means";
       }
     }
 
@@ -40,7 +43,7 @@ namespace UnsupervisedLearning.KMeans
     {
       get
       {
-        throw new NotImplementedException();
+        return "kmeans";
       }
     }
 
@@ -48,7 +51,7 @@ namespace UnsupervisedLearning.KMeans
     {
       get
       {
-        throw new NotImplementedException();
+        return cluster_count + "_" + (use_normalized_values ? "t" : "f");
       }
     }
 
@@ -60,42 +63,87 @@ namespace UnsupervisedLearning.KMeans
         throw new InvalidOperationException("Não há nenhuma instância para ser treinada.");
       if (instances.Select(ti => ti.tag_relevances.Count).Distinct().Count() > 1)
         throw new InvalidOperationException("Existem instâncias com vetores de atributos de tamanhos diferentes.");
-      if (instances[0].tag_relevances.Count != clusters[0].centroid.Count)
+      if (clusters.Any() && instances[0].tag_relevances.Count != clusters[0].centroid.Count)
         throw new InvalidOperationException("A quantidade de atributos das instâncias não bate com a quantidade de atributos dos clusters já definidos.");
 
       instances.Shuffle();
       if (!clusters.Any())
-        clusters = instances.Take(cluster_count).Select((im, index) => new Cluster(index, im.tag_relevances.Select(tr => tr.relevance).ToList())).ToList();
-
-      var stop = false;
+        clusters = instances.Take(cluster_count).Select((im, index) => new Cluster(index, im.getRelevances(use_normalized_values))).ToList();
+      
+      var continueTraining = true;
       var iteration = 1;
-      while (!stop)
+      do
       {
         Console.WriteLine("Iteration " + iteration);
+        iteration++;
+
         //assignment step
         var newInstancesClustered = instances.GroupJoin(clusters, ti => true, c => true,
           (ti, c) => new InstanceClustered(ti, c.WhereMin(cl => EuclidianDistance.distance(ti.tag_relevances.Select(tr => tr.relevance).ToList(), cl.centroid)))).ToList();
 
         //update step
-        clusters = clusters.Join(instances_clustered.GroupBy(ic => ic.cluster), cl => cl, ic => ic.Key, (cl, ic) => new Cluster(cl.id,
+        clusters = clusters.Join(newInstancesClustered.GroupBy(ic => ic.cluster), cl => cl, ic => ic.Key, (cl, ic) => new Cluster(cl.id,
           ic.SelectMany(ic1 => ic1.instance.tag_relevances).GroupBy(ic1 => ic1.tag).OrderBy(ic1 => ic1.Key.id).Select(ic1 => ic1.Average(ic2 => ic2.relevance)).ToList())).ToList();
 
-        //retorna verdadeiro se nenhuma instância mudou de cluster na iteração atual
-        stop = instances_clustered != null && newInstancesClustered.Join(instances_clustered, nic => nic.instance, ic => ic.instance, (nic, ic) => nic.cluster == ic.cluster).All(ic => ic);
+        if (instances_clustered != null)
+        {
+          var instancesThatChanged = newInstancesClustered.Join(instances_clustered, nic => nic.instance, ic => ic.instance, (nic, ic) => nic.cluster.id == ic.cluster.id).Count(c => !c);
+          Console.WriteLine("Quantidade de instâncias que mudaram de cluster: " + instancesThatChanged);
+          continueTraining = instancesThatChanged > 0;
+        }
+
         instances_clustered = newInstancesClustered;
-          
-        iteration++;
-      }
+
+      } while (continueTraining);      
     }
 
-    public IList<IMovieClassification> classify_instances(IList<Instance> tagRelevances)
+    public IEnumerable<IMovieClassification> classify_instances(IList<Instance> tagRelevances)
     {
-      throw new NotImplementedException();
+      if (tagRelevances == null)
+        throw new ArgumentException("tagRelevances");
+      
+      var moviesClassification = new List<IMovieClassification>();
+
+      foreach (var instance in tagRelevances)
+      {
+        var bestFitCluster = clusters.WhereMin(cl => EuclidianDistance.distance(instance.getRelevances(use_normalized_values), cl.centroid));
+        moviesClassification.Add(new KMeansMovieClassification(instance.movie, bestFitCluster));
+      }
+
+      return moviesClassification;
     }
 
     public IEnumerable<string> printClassifier()
     {
-      throw new NotImplementedException();
+      return clusters.Select(cl => cl.id + "," + string.Join(",", cl.centroid.Select(c => c.ToString()).ToList()));
+    }
+
+    public IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile)
+    {
+      return clusters.OrderBy(cl => EuclidianDistance.distance(userProfile.profile, cl.centroid)).Cast<IClassLabel>().ToList();
+    }
+
+    public Func<Movie, string, IMovieClassification> parse_movie_classification()
+    {
+      return (movie, str) =>
+      {
+        var clusterId = int.Parse(str);
+        return new KMeansMovieClassification(movie, clusters.Single(cl => cl.id == clusterId));
+      };
+      
+    }
+
+    public void parse_classifier(IList<string> classLabelConfig)
+    {
+      var clusters = new List<Cluster>();
+      foreach (var clusterConfig in classLabelConfig)
+      {
+        var split = clusterConfig.Split(',');
+        var clusterId = int.Parse(split[0]);
+        var means = split.Skip(1).Select(s => double.Parse(s)).ToList();
+        clusters.Add(new Cluster(clusterId, means));
+      }
+      this.clusters = clusters;
     }
 
     /// <param name="initialMeans">instâncias do dataset serão usadas para criação dos clusters</param>
@@ -109,10 +157,11 @@ namespace UnsupervisedLearning.KMeans
     }
 
     /// <param name="initialMeans">instâncias do dataset serão usadas para criação dos clusters</param>
-    public StandardKMeans(int clusterCount)
+    public StandardKMeans(int clusterCount, bool useNormalizedValues)
     {
       clusters = new List<Cluster>();
       cluster_count = clusterCount;
+      use_normalized_values = useNormalizedValues;
     }
   }
 }

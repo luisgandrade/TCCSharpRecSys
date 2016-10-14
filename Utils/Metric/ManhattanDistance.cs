@@ -11,6 +11,14 @@ namespace Utils.Metric
   /// </summary>
   public class ManhattanDistance : IMetric
   {
+    public string print
+    {
+      get
+      {
+        return "manhattan";
+      }
+    }
+
     public double applyMetric(IList<double> first, IList<double> second)
     {
       if (first == null)

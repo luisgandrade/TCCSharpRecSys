@@ -11,6 +11,14 @@ namespace Utils.Metric
   /// </summary>
   public class EuclidianDistance : IMetric
   {
+    public string print
+    {
+      get
+      {
+        return "euclidian";
+      }
+    }
+
     public double applyMetric(IList<double> first, IList<double> second)
     {
       if (first == null)
