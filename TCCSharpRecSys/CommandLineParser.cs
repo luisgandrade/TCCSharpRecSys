@@ -291,8 +291,6 @@ namespace TCCSharpRecSys
           return som(args);
         case "kmeans":
           return kMeans(args);
-        case "cmeans":
-          return cMeans(args);
         default:
           throw new NotSupportedException("Algoritmo de treinamento \"" + algorithmName + "\" não encontrado");
       }
@@ -300,7 +298,7 @@ namespace TCCSharpRecSys
 
     private Func<IUnsupervisedLearning> som(string args)
     {
-      var regex = new Regex("r=([0-9]+) c=([0-9]+) mt=([a-z]+) n=([a-z]+) niw=([0-9]+)(?: ntc=([0-9]+))?(?: lri=([0-9]*\\.[0-9]+) lrtc=([0-9]*\\.[0-9]+))? un=(true|false)");
+      var regex = new Regex("r=([0-9]+) c=([0-9]+) mt=([a-z]+) n=([a-z]+) niw=([0-9]+)(?: ntc=([0-9]+))?(?: lri=([0-9]*\\.[0-9]+) lrtc=([0-9]*(?:\\.[0-9]+)?))? un=(true|false)");
       var match = regex.Match(args);
 
       if (!match.Success)
@@ -368,24 +366,5 @@ namespace TCCSharpRecSys
       var useNormalizedValues = match.Groups[1].Value == "true";
       return () => new StandardKMeans(clusterCount, useNormalizedValues);
     }
-
-    //private Func<IUnsupervisedLearning> cMeans(string args)
-    //{
-    //  var regex = new Regex("cl=([0-9]+) fz=([0-9]+\\.[0-9]+) st=([0-9]+\\.[0-9]+) un=(true|false)");
-
-    //  var match = regex.Match(args);
-
-    //  if (!match.Success)
-    //    throw new InvalidOperationException("Não foi possível parsear os argumentos do Fuzzy C-Means.");
-
-    //  var clusterCount = int.Parse(match.Groups[1].Value);
-    //  var fuzzynessCoefficient = double.Parse(match.Groups[2].Value);
-    //  var stopCriterion = double.Parse(match.Groups[3].Value);
-    //  var useNormalizedValues = match.Groups[1].Value == "true";
-
-    //  var cMeans = new FuzzyCMeans(clusterCount, fuzzynessCoefficient, stopCriterion, useNormalizedValues);
-
-    //  return () => cMeans;
-    //}
   }
 }
