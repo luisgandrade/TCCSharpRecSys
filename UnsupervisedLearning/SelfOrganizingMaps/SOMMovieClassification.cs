@@ -9,6 +9,9 @@ using UnsupervisedLearning.KMeans;
 
 namespace UnsupervisedLearning.SelfOrganizingMaps
 {
+  /// <summary>
+  /// Implementação de <see cref="IMovieClassification"/> para o algoritmo <see cref="SelfOrganizingMap"/>.
+  /// </summary>
   public class SOMMovieClassification : IMovieClassification
   {
     public Movie movie { get; set; }

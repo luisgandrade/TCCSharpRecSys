@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace UnsupervisedLearning.KMeans
 {
+  /// <summary>
+  /// Representa uma associção entre instância e cluster que significa que 
+  /// a instância está classificada naquele cluster.
+  /// </summary>
   public class InstanceClustered
   {    
     public Instance instance { get; private set; }

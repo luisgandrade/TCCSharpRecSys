@@ -7,6 +7,9 @@ using Lib;
 
 namespace UnsupervisedLearning.KMeans
 {
+  /// <summary>
+  /// Implementação de <see cref="IMovieClassification"/> para o algoritmo <see cref="StandardKMeans"/>.
+  /// </summary>
   public class KMeansMovieClassification : IMovieClassification
   {
     public Movie movie { get; private set; }

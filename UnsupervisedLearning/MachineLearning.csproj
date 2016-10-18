@@ -42,13 +42,11 @@
   <ItemGroup>
     <Compile Include="IClassLabel.cs" />
     <Compile Include="IMovieClassification.cs" />
-    <Compile Include="IClustering.cs" />
     <Compile Include="Instance.cs" />
     <Compile Include="KMeans\Cluster.cs" />
     <Compile Include="KMeans\InstanceClustered.cs" />
     <Compile Include="KMeans\KMeansMovieClassification.cs" />
     <Compile Include="KMeans\StandardKMeans.cs" />
-    <Compile Include="SelfOrganizingMaps\InstanceClassification.cs" />
     <Compile Include="IUnsupervisedLearning.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SelfOrganizingMaps\LearningRateFunctions\ILearningRateFunction.cs" />
@@ -57,10 +55,8 @@
     <Compile Include="SelfOrganizingMaps\SOMMovieClassification.cs" />
     <Compile Include="SelfOrganizingMaps\NeighborhoodFunctions\GaussianNeighborhood.cs" />
     <Compile Include="SelfOrganizingMaps\NeighborhoodFunctions\INeighborhoodFunction.cs" />
-    <Compile Include="SelfOrganizingMaps\Network\Coordinate.cs" />
     <Compile Include="SelfOrganizingMaps\Network\Network.cs" />
     <Compile Include="SelfOrganizingMaps\Network\Neuron.cs" />
-    <Compile Include="SelfOrganizingMaps\NodeLabel.cs" />
     <Compile Include="SelfOrganizingMaps\SelfOrganizingMap.cs" />
     <Compile Include="UserProfile.cs" />
     <Compile Include="UserProfiles\ExponentialDecay.cs" />

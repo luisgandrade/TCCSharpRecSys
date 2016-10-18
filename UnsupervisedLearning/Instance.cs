@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace UnsupervisedLearning
 {
+  /// <summary>
+  /// Representa uma instância (i.e., <see cref="Movie"/>) com seus respectivos atributos (i.e., <see cref="TagRelevance"/>).
+  /// </summary>
   public class Instance
   {
     public Movie movie { get; private set; }

@@ -7,13 +7,23 @@ using UnsupervisedLearning;
 
 namespace UnsupervisedLearning.KMeans
 {
-  public class Cluster
+  /// <summary>
+  /// Unidade de agrumanento do algoritmo K-Means.
+  /// </summary>
+  public class Cluster : IClassLabel
   {
+    /// <summary>
+    /// Identificador da unidade.
+    /// </summary>
     public int id { get; private set; }
-
+    /// <summary>
+    /// Centróide do cluster. É a média de todas as instâncias classificadas neste cluster.
+    /// </summary>
     public IList<double> centroid { get; private set; }
     
-
+    /// <summary>
+    /// Atualiza o centróide desse cluster com um novo centróide.
+    /// </summary>
     public void updateCentroid(IList<double> newCentroid)
     {
       if (newCentroid == null)

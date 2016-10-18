@@ -6,7 +6,7 @@ using Utils.Metric;
 namespace UnsupervisedLearning.SelfOrganizingMaps.Network
 {
   /// <summary>
-  /// Representa um único neurônio no mapa auto-organizável.
+  /// Unidade de agrupamento do algoritmo de mapas auto-organizáveis.
   /// </summary>
   public class Neuron : IClassLabel
   {

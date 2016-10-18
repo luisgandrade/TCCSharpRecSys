@@ -51,6 +51,7 @@
     <Compile Include="Persistence\FileWritter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RecommendationResults.cs" />
     <Compile Include="Recommender.cs" />
   </ItemGroup>
   <ItemGroup>

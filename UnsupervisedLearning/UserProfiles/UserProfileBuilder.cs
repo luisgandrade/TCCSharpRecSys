@@ -8,9 +8,20 @@ namespace TCCSharpRecSys
 {
   public class UserProfileBuilder
   {
+    /// <summary>
+    /// Fórmula de decaímento dos pesos ao decorrer do tempo.
+    /// </summary>
     private IDecayFormula decay_formula;
 
-
+    /// <summary>
+    /// Constróis os <see cref="UserProfile"/> dos usuários que possuem um número suficiente de <see cref="Rating"/>s.  Os <see cref="Rating"/>s
+    /// do usuário são ordernados e separados em dois grupos: um de treinamento e outro de teste (o último não é usado aqui). A porcentagem de split é 
+    /// definida por <paramref name="trainingCutoff"/>
+    /// </summary>
+    /// <param name="ratings">avaliações dos usuários</param>
+    /// <param name="tagRelevances">todas as relevâncias de tags e filmes</param>
+    /// <param name="trainingCutoff">porcentagem de split</param>
+    /// <returns></returns>
     public IList<UserProfile> buildUserProfiles(IList<Rating> ratings, IList<TagRelevance> tagRelevances, double trainingCutoff)
     {
       if (ratings == null)

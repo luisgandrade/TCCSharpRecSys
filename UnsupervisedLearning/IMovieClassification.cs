@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace UnsupervisedLearning
 {
+  /// <summary>
+  /// Fornece uma interface para filmes classificados.
+  /// </summary>
   public interface IMovieClassification
   {
     Movie movie { get; }   
