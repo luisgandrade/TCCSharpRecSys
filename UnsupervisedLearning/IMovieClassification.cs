@@ -14,6 +14,8 @@ namespace UnsupervisedLearning
   {
     Movie movie { get; }   
 
+    IClassLabel label { get; }
+
     string print();
   }
 }

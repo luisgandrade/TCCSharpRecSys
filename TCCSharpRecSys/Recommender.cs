@@ -20,14 +20,16 @@ namespace TCCSharpRecSys
 
     public RecommendationResults recommend(UserProfile userProfile, IList<Movie> moviesAlreadyWatched, IList<Rating> ratingsNotIncluded)
     {
+      if (userProfile == null)
+        throw new ArgumentException("userProfile");
+      if (moviesAlreadyWatched == null)
+        throw new ArgumentException("moviesAlreadyWatched");
+      if (ratingsNotIncluded == null)
+        throw new ArgumentException("ratingsNotIncluded");
 
       var bestMatchingClasses = algorithm.best_matching_units(userProfile);
 
-      var moviesByLabel = bestMatchingClasses.Join(movies_by_label, bmc => bmc, mbl => mbl.Key, (bmc, mbl) => new
-      {
-        movies = mbl.Value,
-        count = mbl.Value.Count
-      });
+      var moviesByLabel = bestMatchingClasses.Join(movies_by_label, bmc => bmc, mbl => mbl.Key, (bmc, mbl) => mbl.Value).SelectMany(mbl => mbl);
 
       var moviesRecommended = 0;      
       var firstNRecommendationsPrecision = 0;
@@ -36,21 +38,21 @@ namespace TCCSharpRecSys
 
       var nextNMovies = ratingsNotIncluded.OrderBy(rni => rni.timestamp).Take(predict_next_n_movies).Select(rni => rni.movie).ToList();
 
-      while (moviesRecommended < 2 * predict_next_n_movies || (firstNRecommendationsPrecision + lastNRecommendationsPrecision) >= nextNMovies.Count)
+      while (moviesRecommended < 2 * predict_next_n_movies && (firstNRecommendationsPrecision + lastNRecommendationsPrecision) < nextNMovies.Count)
       {
-        var moviesLabel = moviesByLabelEnumerator.Current;
-        foreach (var movie in moviesLabel.movies.Except(moviesAlreadyWatched))
+        moviesByLabelEnumerator.MoveNext();
+        var movie = moviesByLabelEnumerator.Current;
+        if (!moviesAlreadyWatched.Contains(movie))
         {
           if (nextNMovies.Contains(movie))
           {
-            if (moviesRecommended < predict_next_n_movies)
+            if (moviesRecommended < predict_next_n_movies) 
               firstNRecommendationsPrecision++;
             else
               lastNRecommendationsPrecision++;
           }
           moviesRecommended++;
         }
-        moviesByLabelEnumerator.MoveNext();
       }
 
       return new RecommendationResults(userProfile, moviesAlreadyWatched.Count + ratingsNotIncluded.Count, firstNRecommendationsPrecision, lastNRecommendationsPrecision);

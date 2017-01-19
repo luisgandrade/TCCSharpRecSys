@@ -20,21 +20,38 @@ namespace TCCSharpRecSys
     static void Main(string[] args)
     {
 
-      if (args.Count() == 0)
-        throw new InvalidOperationException("Args faltando.");
 
-      //try
-      //{
-
-      var cli = new CommandLineParser();
-      var act = cli.parseCommands(File.ReadAllText(args[0]));
-
-      foreach (var a in act)
+      var resultsAgg = new ResultsAggregator();
+      foreach (var cutoff in new[] { .3m, .5m, .8m })
       {
-        a.Invoke();
+        resultsAgg.usersWithQuantityOfRatings(cutoff);
       }
 
-      Console.ReadKey();
+      //if (args.Count() == 0)
+      //  throw new InvalidOperationException("Args faltando.");
+
+      ////try
+      ////{
+      //var cli = new CommandLineParser();
+      //var act = cli.parseCommands(File.ReadAllText(args[0]));
+
+
+      ////var tagRelevances = FileReader.getInstance().readTagRelevances();
+      ////var tagRelevancesGrouped = tagRelevances.GroupBy(t => t.tag);
+      ////var tagsBoundariesValues = tagRelevancesGrouped.Select(t => new { tag = t.Key, min = t.Min(t1 => t1.relevance), max = t.Max(t1 => t1.relevance) });
+      ////var t2 = tagRelevances.Join(tagsBoundariesValues, tr => tr.tag, tbv => tbv.tag, (tr, tbv) => new { tagRel = tr, normalizedValue = (tr.relevance - tbv.min) / (tbv.max - tbv.min) })
+      ////                      .ToList();
+      ////foreach (var t in t2)
+      ////  t.tagRel.normalized_relevance = t.normalizedValue;
+      ////FileWritter.getInstance().writeTagRel(t2.Select(t => t.tagRel).ToList());
+
+
+      //foreach (var a in act)
+      //{
+      //  a.Invoke();
+      //}
+
+      //Console.ReadKey();
 
 
       //var fileReader = FileReader.getInstance();
@@ -74,145 +91,6 @@ namespace TCCSharpRecSys
       //  Console.ReadKey();
       //}
     }
-    
-
-    //static void buildUserProfiles(string filePath)
-    //{
-    //  var fileReader = FileReader.getInstance();
-    //  var fileWritter = new FileWritter(filePath);
-      
-    //  var ratings = fileReader.readUserRatings();
-      
-    //  var tagRelevance = fileReader.readTagRelevances();
-    //  var userProfileBuilder = new UserProfileBuilder();
-    //  var userProfiles = new List<UserProfile>();
-    //  Console.WriteLine("Construindo perfis...");
-    //  var user = 1;
-
-    //  foreach (var userRatings in ratingsByUser)
-    //  {
-    //    Console.WriteLine(user);
-    //    var trainingRatings = userRatings.ratings.Take((int)(.8 * userRatings.ratings.Count));
-    //    var evaluationRatings = userRatings.ratings.Skip((int)(.8 * userRatings.ratings.Count));
-    //    var userProfile = userProfileBuilder.buildUserProfile(trainingRatings.ToList(), tagRelevance, trainingRatings.Max(rat => rat.timestamp).AddDays(1));
-    //    userProfiles.Add(userProfile);
-
-    //    //var moviesRecommended = recommender.recommend(userProfile.profile, trainingRatings.Select(tr => tr.movie).ToList());
-    //    //var matches = evaluationRatings.Select(er => er).Join(moviesRecommended, m => m.movie, cm => cm, (m, cm) => m);
-    //    //recomendacoesPorUsuario.Add(new Tuple<int, int, int>(userProfile.Key, matches.Count(), evaluationRatings.Count()));
-    //    Console.WriteLine("User: " + user);
-    //    user++;
-    //    if(userProfiles.Count == 20000)
-    //    {
-    //      fileWritter.appendUserProfiles(userProfiles);
-    //      Console.WriteLine("Perfis escritos");
-    //      userProfiles.Clear();
-    //    }
-    //  }
-
-    //}
-
-    //static void labelNodes()
-    //{
-    //  var fileReader = FileReader.getInstance();
-    //  var fileWritter = new FileWritter();
-
-    //  var tags = fileReader.readTags();
-    //  foreach (var dimensions in new[] { 15, 20 })
-    //  {
-    //    for (int i = 1; i <= 3; i++)
-    //    {
-    //      Console.WriteLine("Rotulando redes. dimensions: " + dimensions + "; instance: " + i);
-    //      var neurons = fileReader.existingNeurons(tags.Count, dimensions, dimensions, i);
-    //      var som = new SOMClassification(dimensions, dimensions, tags.Count, i, neurons, true);
-    //      //var labelNodes = som.bestFitAttributes(tags.Select(attr => new KeyValuePair<Tag, double>(attr, (1 - attr.population_average) / attr.population_standard_deviation)).ToList(), 10);
-    //      //fileWritter.writeSOMLabels(som, labelNodes);
-    //    }
-    //  }     
-
-    //}
-
-    //static void classify()
-    //{
-    //  var fileReader = new FileReader();
-    //  var fileWritter = new FileWritter();
-
-    //  var moviesAttributes = fileReader.readTagRelevances();
-    //  var attr_count = moviesAttributes.Select(ma => ma.tag_id).Distinct().Count();
-    //  foreach (var dimensions in new[] { 10, 20, 30 })
-    //  {
-    //    for (int i = 1; i <= 3; i++)
-    //    {
-    //      Console.WriteLine("Classificando. dimensions: " + dimensions + "; instance: " + i);
-    //      var neurons = fileReader.existingNeurons(attr_count, dimensions, dimensions, i);
-    //      var som = new SOMClassification(dimensions, dimensions, attr_count, i, neurons, true);
-    //      var moviesClassification = som.classifyInstances(
-    //                                      moviesAttributes.GroupBy(ma => ma.movie_id)
-    //                                                      .Select(ma => new KeyValuePair<int, List<double>>(ma.Key, ma.OrderBy(m => m.tag_id).Select(tr => tr.relevance).ToList()))
-    //                                                      .ToList());
-    //      fileWritter.writeSOMClassification(som, moviesClassification);
-    //    }
-    //  }
-
-    //}
-
-    //static void trainSOM(string filePath)
-    //{
-    //  var fileReader = FileReader.getInstance();
-    //  var fileWritter = new FileWritter(filePath);
-
-    //  foreach (var dimensions in new[] { 10, 20, 30 })
-    //  {
-    //    for (int i = 0; i < 3; i++)
-    //    {
-    //      Console.WriteLine("Criando SOM. dimensions: " + dimensions + "; instance: " + i);
-    //      var tagRelevances = fileReader.readTagRelevances()
-    //                                    .GroupBy(ma => ma.movie)
-    //                                    .Select(ma => ma.OrderBy(m => m.tag.id).ToList())
-    //                                    .ToList();
-    //      Console.WriteLine(tagRelevances.Select(tr => tr.Count).Distinct().Count());
-    //      var som = new SelfOrganizingMap(dimensions, dimensions, tagRelevances[0].Count, new GaussianNeighborhood((int)((double)dimensions / 2)), new LearningRateFunction(),
-    //        new EuclidianDistance(), false);
-    //      fileWritter.writeSOMNodes(som);
-    //      var stop = false;
-    //      var iteration = 0;
-
-    //      while (!stop)
-    //      {
-    //        if (iteration % tagRelevances.Count == 0)
-    //          tagRelevances.Shuffle();
-    //        stop = som.iterate(tagRelevances[iteration % tagRelevances.Count], iteration);
-    //        iteration++;
-    //      }
-
-    //      fileWritter.writeSOMNodes(som);
-    //    }
-    //  }
- 
-    //}
-
-  //  static IList<int> createAttributes(IList<Movie> movies)
-  //  {
-  //    var attributeExtractor = new AttributeExtractor();
-  //    var fileWriter = new FileWritter();
-
-  //    var attr_counts = new List<int>();
-
-  //    foreach (var percentage in new[] { .05m, .01m, .005m })
-  //    {
-  //      Console.WriteLine("Choosing attributes...");
-  //      var attributes = attributeExtractor.chooseAttributesFromMovies(movies, percentage);
-  //      Console.WriteLine("Extracting attributes...");
-  //      var movieAttributes = attributeExtractor.extractAttributesFromMovies(movies, attributes, true);
-
-  //      Console.WriteLine("Writing attributes...");
-  //      fileWriter.writeAttributes(attributes);
-  //      Console.WriteLine("Writing movies attributes...");
-  //      fileWriter.writeMovieAttributes(movieAttributes, attributes.Count);
-  //      attr_counts.Add(attributes.Count);
-  //    }
-  //    return attr_counts;
-  //  }
   }
 }
 

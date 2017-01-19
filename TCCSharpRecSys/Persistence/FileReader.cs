@@ -62,7 +62,7 @@ namespace TCCSharpRecSys.Persistence
       if (file_prefix == null)
         throw new ArgumentException("file_prefix");
 
-      var regex = new Regex(file_prefix + "_([0-9]+)\\.csv");      
+      var regex = new Regex("\\\\" + file_prefix + "_([0-9]+)\\.csv$");      
       var filesInSubDir = Directory.GetFiles(dir_path + sub_dir + "\\train\\");
       var instances = new List<int>();
       foreach (var file in filesInSubDir)
@@ -94,7 +94,6 @@ namespace TCCSharpRecSys.Persistence
         var year = match.Groups[3].Value.Length > 0 ? int.Parse(match.Groups[3].Value): 0;
 
         movies.Add(new Movie(id, title, year));
-        Console.WriteLine(id);
       }
 
       reader.Close();
@@ -147,6 +146,41 @@ namespace TCCSharpRecSys.Persistence
       ratings_read = ratings;
 
       return ratings;
+    }
+
+    public IList<int> getPartsOfProfiles(double cutoff)
+    {
+      var files = Directory.GetFiles(dir_path + "profiles");
+      var regex = new Regex("exponential_" + cutoff + "_pt([0-9])+\\.csv");
+      var pts = new List<int>();
+      foreach (var file in files)
+      {
+        var match = regex.Match(file);
+        if (match.Success)
+          pts.Add(int.Parse(match.Groups[1].Value));
+      }
+      return pts;
+    }
+
+    public IList<UserProfile> readUserProfiles(double cutoff,int chunk)
+    {
+
+      var profiles = new List<UserProfile>();
+
+      reader = new StreamReader(dir_path + "\\profiles\\exponential_" + cutoff + "_pt" + chunk + ".csv");
+
+      while (!reader.EndOfStream)
+      {
+        var line = reader.ReadLine();
+        var data = line.Split(',');
+
+        var user_id = int.Parse(data[0]);
+        var profile = data.Skip(1).Select(d => double.Parse(d)).ToList();
+
+        profiles.Add(new UserProfile(user_id, profile));
+      }
+
+      return profiles;
     }
 
     public IList<Tag> readTags()
@@ -221,13 +255,13 @@ namespace TCCSharpRecSys.Persistence
       return tagRelevances;
     }
 
-    public IList<IMovieClassification> readMovieClassification(string algorithmDir, string filename, Func<Movie, string, IMovieClassification> classLabelParser)
+    public IList<IMovieClassification> readMovieClassification(string algorithmDir, string filename, int instance, Func<Movie, string, IMovieClassification> classLabelParser)
     {
       if (movie_classification_read.Any())
         return movie_classification_read;
       if (!movies_read.Any())
         readMovies();
-      reader = new StreamReader(dir_path + algorithmDir + "\\" + "movie_classification\\" + filename +".csv");
+      reader = new StreamReader(dir_path + algorithmDir + "\\classify\\" + filename +"_" + instance + ".csv");
 
       
       var moviesClassification = new List<IMovieClassification>();
@@ -261,7 +295,7 @@ namespace TCCSharpRecSys.Persistence
     public IList<string> readAlgorithmConfig(string algorithmDir, string filename, int instance)
     {
 
-      reader = new StreamReader(dir_path + algorithmDir + "\\train_" + filename + "_" + instance + ".csv");
+      reader = new StreamReader(dir_path + algorithmDir + "\\train\\" + filename + "_" + instance + ".csv");
       var classLabelsStr = new List<string>();
 
       while (!reader.EndOfStream)
@@ -271,6 +305,7 @@ namespace TCCSharpRecSys.Persistence
 
       return classLabelsStr;
     }
+    
 
     //public IList<Tuple<int, int, List<double>>> existingNeurons(int rows, int columns, string metric, string neighborhood, int instance)
 

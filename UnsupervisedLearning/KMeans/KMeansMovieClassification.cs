@@ -16,6 +16,14 @@ namespace UnsupervisedLearning.KMeans
 
     public Cluster cluster { get; private set; }
 
+    public IClassLabel label
+    {
+      get
+      {
+        return cluster;
+      }
+    }
+
     public KMeansMovieClassification(Movie movie, Cluster cluster)
     {
       if (movie == null)

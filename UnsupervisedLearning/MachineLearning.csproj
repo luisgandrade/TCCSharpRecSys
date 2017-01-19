@@ -40,6 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExpectationMaximization\ExpecationMaximization.cs" />
+    <Compile Include="ExpectationMaximization\GaussianDistribution.cs" />
+    <Compile Include="ExpectationMaximization\MixtureModel\GaussianMixtureModel.cs" />
+    <Compile Include="ExpectationMaximization\MixtureModel\IDistribution.cs" />
+    <Compile Include="ExpectationMaximization\MixtureModel\IMixtureModel.cs" />
     <Compile Include="IClassLabel.cs" />
     <Compile Include="IMovieClassification.cs" />
     <Compile Include="Instance.cs" />

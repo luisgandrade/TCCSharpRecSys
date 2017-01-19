@@ -71,12 +71,8 @@ namespace UnsupervisedLearning.KMeans
         clusters = instances.Take(cluster_count).Select((im, index) => new Cluster(index, im.getRelevances(use_normalized_values))).ToList();
       
       var continueTraining = true;
-      var iteration = 1;
       do
       {
-        Console.WriteLine("Iteration " + iteration);
-        iteration++;
-
         //assignment step
         var newInstancesClustered = instances.GroupJoin(clusters, ti => true, c => true,
           (ti, c) => new InstanceClustered(ti, c.WhereMin(cl => EuclidianDistance.distance(ti.tag_relevances.Select(tr => tr.relevance).ToList(), cl.centroid)))).ToList();
@@ -86,11 +82,7 @@ namespace UnsupervisedLearning.KMeans
           ic.SelectMany(ic1 => ic1.instance.tag_relevances).GroupBy(ic1 => ic1.tag).OrderBy(ic1 => ic1.Key.id).Select(ic1 => ic1.Average(ic2 => ic2.relevance)).ToList())).ToList();
 
         if (instances_clustered != null)
-        {
-          var instancesThatChanged = newInstancesClustered.Join(instances_clustered, nic => nic.instance, ic => ic.instance, (nic, ic) => nic.cluster.id == ic.cluster.id).Count(c => !c);
-          Console.WriteLine("Quantidade de instâncias que mudaram de cluster: " + instancesThatChanged);
-          continueTraining = instancesThatChanged > 0;
-        }
+          continueTraining = newInstancesClustered.Join(instances_clustered, nic => nic.instance, ic => ic.instance, (nic, ic) => nic.cluster.id == ic.cluster.id).Count(c => !c) > 0;
 
         instances_clustered = newInstancesClustered;
 

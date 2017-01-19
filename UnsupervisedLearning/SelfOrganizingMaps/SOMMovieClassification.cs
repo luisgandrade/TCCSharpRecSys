@@ -17,7 +17,15 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
     public Movie movie { get; set; }
 
     public Neuron neuron { get; set; }
-    
+
+    public IClassLabel label
+    {
+      get
+      {
+        return neuron;
+      }
+    }
+
     public SOMMovieClassification(Movie movie, Neuron neuron)
     {
       if (movie == null)

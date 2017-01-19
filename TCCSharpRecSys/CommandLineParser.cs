@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Lib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using TCCSharpRecSys.Persistence;
 using UnsupervisedLearning;
@@ -134,7 +136,7 @@ namespace TCCSharpRecSys
       if (args == null)
         throw new ArgumentException("args");
 
-      var regex = new Regex("(.*?) instances=([1-9]+),([1-9]+)");
+      var regex = new Regex("(.*?) instances=([1-9]+),([0-9]+)");
 
       var match = regex.Match(args);
 
@@ -198,7 +200,7 @@ namespace TCCSharpRecSys
       if (args == null)
         throw new ArgumentException("args");
 
-      var regex = new Regex("(.*?) instances=([1-9]+),([1-9]+) (.+)");
+      var regex = new Regex("(.*?) instances=([0-9]+),([0-9]+) ct=(0\\.[1-9]) p=([0-9]+)");
 
       var match = regex.Match(args);
 
@@ -208,7 +210,8 @@ namespace TCCSharpRecSys
       var algorithmInfo = match.Groups[1].Value;
       var firstInstance = int.Parse(match.Groups[2].Value);
       var lastInstance = int.Parse(match.Groups[3].Value);
-      var userProfilesFile = int.Parse(match.Groups[4].Value);
+      var userProfileCutoff = double.Parse(match.Groups[4].Value);
+      var predictNextN = int.Parse(match.Groups[5].Value);
 
       if (firstInstance > lastInstance)
         throw new ArgumentOutOfRangeException("O limite inferior do range é maior que o limite superior.");
@@ -217,12 +220,115 @@ namespace TCCSharpRecSys
 
       return () =>
       {
+        var fileReader = FileReader.getInstance();
+        var fileWriter = FileWritter.getInstance();
         var dummyAlg = algorithmGen();
-        var exisingTrainedModels = FileReader.getInstance().existingInstances(dummyAlg.sub_dir, dummyAlg.file_prefix);
-        if (!exisingTrainedModels.OrderBy(etm => etm).SequenceEqual(Enumerable.Range(firstInstance, lastInstance - firstInstance)))
+        var exisingTrainedModels = fileReader.existingInstances(dummyAlg.sub_dir, dummyAlg.file_prefix);
+        if (!exisingTrainedModels.OrderBy(etm => etm).SequenceEqual(Enumerable.Range(firstInstance, lastInstance)))
           throw new InvalidOperationException("O comando deve classificar de acordo as instâncias de " + firstInstance + " até " + lastInstance + ". Porém, as " +
             "seguintes instâncias não foram encontradas em disco: " + string.Join(",", exisingTrainedModels.ToArray()));
+        
+        var profileParts = fileReader.getPartsOfProfiles(userProfileCutoff);
 
+        Func<int, int, Action> act = (first, last) =>
+        {
+
+          return () =>
+          {
+            for (int i = first; i <= last; i++)
+            {
+              var newAlg = algorithmGen();
+
+              while (!Monitor.TryEnter(fileWriter))
+                Thread.Sleep(100);
+              try
+              {                
+                fileWriter.log("Recomendando filmes com algoritmo " + newAlg.name + ". Config: " + newAlg.file_prefix + ". Instância: " + i, true);
+              }
+              finally
+              {
+                Monitor.Exit(fileWriter);
+              }
+              Console.WriteLine("Recomendando filmes com algoritmo " + newAlg.name + ". Config: " + newAlg.file_prefix + ". Instância: " + i);
+
+              var start = DateTime.Now;
+
+              IList<string> trainedModel = new List<string>();
+              IList<IMovieClassification> moviesClassifications = new List<IMovieClassification>();
+              while (!Monitor.TryEnter(fileReader))
+                Thread.Sleep(100);
+              try
+              {
+                trainedModel = fileReader.readAlgorithmConfig(newAlg.sub_dir, newAlg.file_prefix, i);
+                moviesClassifications = fileReader.readMovieClassification(newAlg.sub_dir, newAlg.file_prefix, i, newAlg.parse_movie_classification());
+              }              
+              finally
+              {
+                Monitor.Exit(fileReader);
+              }
+
+              newAlg.parse_classifier(trainedModel);
+              
+              var moviesByLabel = moviesClassifications.GroupBy(mc => mc.label).ToDictionary(mc => mc.Key, mc => mc.Select(mc1 => mc1.movie).ToList());
+              var recommender = new Recommender(newAlg, moviesByLabel, predictNextN);
+
+              var recResults = new List<RecommendationResults>();
+              foreach (var pt in profileParts)
+              {
+                IList<UserProfile> usersProfiles = new List<UserProfile>();
+                IList<Rating> ratings = new List<Rating>();
+                while (!Monitor.TryEnter(fileReader))
+                  Thread.Sleep(100);
+                try
+                {
+                  usersProfiles = fileReader.readUserProfiles(userProfileCutoff, pt);
+                  ratings = fileReader.readUserRatings(pt);
+                }
+                finally
+                {
+                  Monitor.Exit(fileReader);
+                }
+
+                var profilesWithRatings = usersProfiles.GroupJoin(ratings, up => up.user_id, r => r.user_id, (up, r) => new { userProfile = up, ratings = r.OrderBy(r1 => r1.timestamp).ToList() })
+                                                        .Select(upr => new
+                                                        {
+                                                          userProfile = upr.userProfile,
+                                                          moviesAlreadyWatched = upr.ratings.Take((int)(userProfileCutoff * upr.ratings.Count)).Select(r => r.movie),
+                                                          ratingsNotIncluded = upr.ratings.Skip((int)(userProfileCutoff * upr.ratings.Count))
+                                                        });
+                foreach (var profile in profilesWithRatings)
+                  recResults.Add(recommender.recommend(profile.userProfile, profile.moviesAlreadyWatched.ToList(), profile.ratingsNotIncluded.ToList()));
+              }
+              var end = DateTime.Now;
+
+              var execTime = end - start;
+              while (!Monitor.TryEnter(fileWriter))
+                Thread.Sleep(100);
+              try
+              {
+                fileWriter.writeRecommendationResults(newAlg.sub_dir, newAlg.file_prefix, userProfileCutoff, predictNextN, i, recResults);
+                fileWriter.log("Finalizou recomendações com algoritmo " + newAlg.name + ". Config: " + newAlg.file_prefix + ". Instância: " + i + ". Tempo de execução: " +
+                execTime.Hours + "h" + execTime.Minutes + "min", true);
+              }
+              finally
+              {
+                Monitor.Exit(fileWriter);
+              }
+              Console.WriteLine("Finalizou recomendações com algoritmo " + newAlg.name + ". Config: " + newAlg.file_prefix + ". Instância: " + i + ". Tempo de execução: " +
+                execTime.Hours + "h" + execTime.Minutes + "min");
+              
+            }
+          };
+        };
+
+        var parallelizationThreshold = (int)((lastInstance - firstInstance) / 3.0);
+
+        var firstTask = Task.Run(act(firstInstance, parallelizationThreshold));
+        var secondTask = Task.Run(act(parallelizationThreshold + 1, 2 * parallelizationThreshold));
+        var thirdTask = Task.Run(act(2 * parallelizationThreshold + 1, lastInstance));
+
+        Task.WaitAll(firstTask, secondTask, thirdTask);
+        
       };
     }
 
@@ -363,7 +469,7 @@ namespace TCCSharpRecSys
         throw new InvalidOperationException("Não foi possível parsear os argumentos do K-Means padrão.");
 
       var clusterCount = int.Parse(match.Groups[1].Value);
-      var useNormalizedValues = match.Groups[1].Value == "true";
+      var useNormalizedValues = match.Groups[2].Value == "true";
       return () => new StandardKMeans(clusterCount, useNormalizedValues);
     }
   }

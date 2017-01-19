@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using UnsupervisedLearning;
 using UnsupervisedLearning.KMeans;
@@ -17,21 +18,23 @@ namespace TCCSharpRecSys.Persistence
 
     private static string dir_path;
 
-    private static FileWritter file_writter;
+    private static FileWritter file_writter;    
+
+    private object resource_lock;
 
     private FileWritter()
-    {      
+    {
     }
 
     public static FileWritter getInstance()
     {
-      if(file_writter == null)
+      if (file_writter == null)
       {
         if (dir_path == null)
           throw new InvalidOperationException("Antes de instanciar o escritor de arquivos é necessário setar o caminho absolutos dos arquivos.");
         file_writter = new FileWritter();
       }
-      return file_writter;        
+      return file_writter;
     }
 
     public static void setDirPath(string dirPath)
@@ -46,10 +49,19 @@ namespace TCCSharpRecSys.Persistence
     }
 
     public void log(string line, bool append)
+    {      
+      var writter = new StreamWriter(dir_path + "log.txt", append);
+      writter.WriteLine("@" + DateTime.Now.ToString("dd/MM/yyyy,HH:mm") + "- " + line);
+      writter.Close();
+
+    }
+
+    public void writeTagRel(IList<TagRelevance> tagRelevances)
     {
-      using(var writter = new StreamWriter(dir_path + "log.txt", append))
+      using (var writter = new StreamWriter(dir_path + "tag_relevance.csv"))
       {
-        writter.WriteLine("@" + DateTime.Now.ToString("dd/MM/yyyy,HH:mm") + "- " + line);
+        foreach (var tagRel in tagRelevances)
+          writter.WriteLine(string.Join(",", tagRel.movie.id, tagRel.tag.id, tagRel.relevance, tagRel.normalized_relevance));
       }
     }
 
@@ -66,7 +78,7 @@ namespace TCCSharpRecSys.Persistence
         Directory.CreateDirectory(dir_path + sub_dir);
       if (!Directory.Exists(dir_path + sub_dir + "\\classify"))
         Directory.CreateDirectory(dir_path + sub_dir + "\\classify");
-
+      
       using (var writter = new StreamWriter(dir_path + sub_dir + "\\classify\\" + file_prefix + "_" + instance + ".csv"))
       {
         foreach (var movieClassification in moviesClassifications)
@@ -84,9 +96,10 @@ namespace TCCSharpRecSys.Persistence
         throw new ArgumentException("linesToWrite");
 
       if (!Directory.Exists(dir_path + sub_dir))
-        Directory.CreateDirectory(dir_path + sub_dir);      
-      if(!Directory.Exists(dir_path + sub_dir + "\\train"))
+        Directory.CreateDirectory(dir_path + sub_dir);
+      if (!Directory.Exists(dir_path + sub_dir + "\\train"))
         Directory.CreateDirectory(dir_path + sub_dir + "\\train");
+
       using (var writter = new StreamWriter(dir_path + sub_dir + "\\train\\" + file_prefix + "_" + instance + ".csv"))
       {
         foreach (var line in linesToWrite)
@@ -99,11 +112,12 @@ namespace TCCSharpRecSys.Persistence
       var baseDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
       if (!Directory.Exists(dir_path + "profiles"))
         Directory.CreateDirectory(dir_path + "profiles");
+
       using (var writter = new StreamWriter(dir_path + "profiles\\ratings_pt" + chunk + ".csv"))
       {
         foreach (var rating in ratings)
           writter.WriteLine(rating.movie.id + "," + rating.user_id + "," + rating.rating + "," + (rating.timestamp - baseDate).Duration().TotalSeconds);
-            
+
       }
     }
 
@@ -111,24 +125,25 @@ namespace TCCSharpRecSys.Persistence
     {
       if (!Directory.Exists(dir_path + "\\profiles"))
         Directory.CreateDirectory(dir_path + "\\profiles");
+
       using (var writter = new StreamWriter(dir_path + filename, true))
       {
         foreach (var profile in userProfile)
           writter.WriteLine(profile.user_id + profile.profile.Aggregate("", (acc, n) => acc + "," + n));
         Console.WriteLine("Perfis de usuários escritos.");
       }
-      
     }
 
     public void writeUserProfiles(IList<UserProfile> userProfile)
     {
+
       using (var writter = new StreamWriter(dir_path + "user_profile.csv"))
       {
         foreach (var profile in userProfile)
-          writter.WriteLine(profile.user_id + profile.profile.Aggregate("",(acc, n) => acc + "," + n));
+          writter.WriteLine(profile.user_id + profile.profile.Aggregate("", (acc, n) => acc + "," + n));
       }
     }
-    
+
     //public void writeClusters(IList<Cluster> clusters)
     //{
     //  if (!Directory.Exists(file_path + "standard_k_means"))
@@ -145,15 +160,38 @@ namespace TCCSharpRecSys.Persistence
     //}
 
     // user_id, filmes recomendados com match, numero de filmes para treino
-    public void writePrecision(IList<Tuple<int, int, int>> recomendacoesParUsuario)
+    
+
+    public void writeRecommendationResults(string sub_dir, string file_prefix, double cutoff, int predictNextN, int instance, IList<RecommendationResults> recResults)
     {
-      using (var writter = new StreamWriter(dir_path + "recommendations.csv"))
+      if (recResults == null)
+        throw new ArgumentException("recResults");
+      if (sub_dir == null)
+        throw new ArgumentException("sub_dir");
+      if (file_prefix == null)
+        throw new ArgumentException("file_prefix");
+
+      if (!Directory.Exists(dir_path + sub_dir))
+        Directory.CreateDirectory(dir_path + sub_dir);
+      if (!Directory.Exists(dir_path + sub_dir + "\\recommend"))
+        Directory.CreateDirectory(dir_path + sub_dir + "\\recommend");
+      
+      using (var writter = new StreamWriter(dir_path + sub_dir + "\\recommend\\" + file_prefix + "_" + cutoff + "_" + predictNextN + "_" + instance + ".csv"))
       {
-        foreach (var recommendation in recomendacoesParUsuario)
-            writter.WriteLine(recommendation.Item1 + "," + recommendation.Item2 + "," + recommendation.Item3);
+        foreach (var result in recResults)
+          writter.WriteLine(result.user.user_id + "," + result.number_of_ratings + "," + result.first_n_recommendations_precision + "," + result.last_n_recommendations_precision);
       }
     }
 
+
+    public void writeUsersWithQuantityOfRatings(decimal cutoff, IList<Tuple<int, int, int>> usersAndRatings)
+    {
+      using(var writter = new StreamWriter(dir_path + "profiles\\usersAndRatings_" + cutoff + ".csv"))
+      {
+        foreach (var user in usersAndRatings)
+          writter.WriteLine(user.Item1 + "," + user.Item2 + "," + user.Item3);
+      }
+    }
 
   }
 }

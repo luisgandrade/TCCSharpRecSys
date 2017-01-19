@@ -27,6 +27,6 @@ namespace Lib
       this.id = id;
       this.title = title;
       this.year = year;
-    }
+    }   
   }
 }
