@@ -27,16 +27,26 @@ namespace TCCSharpRecSys
       if (ratingsNotIncluded == null)
         throw new ArgumentException("ratingsNotIncluded");
 
-      var bestMatchingClasses = algorithm.best_matching_units(userProfile);
+      var bestMatchingClasses = algorithm.best_matching_units(userProfile).ToList();
 
-      var moviesByLabel = bestMatchingClasses.Join(movies_by_label, bmc => bmc, mbl => mbl.Key, (bmc, mbl) => mbl.Value).SelectMany(mbl => mbl);
+      var moviesByLabel = new List<Movie>();
+      foreach (var bmc in bestMatchingClasses)
+      {
+        foreach (var m in movies_by_label.Keys)
+        {
+          if (bmc.Equals(m))
+            moviesByLabel.AddRange(movies_by_label[m]);
+        }
+      }
+
+      //var moviesByLabel = bestMatchingClasses.Join(movies_by_label, bmc => bmc, mbl => mbl.Key, (bmc, mbl) => mbl.Value).SelectMany(mbl => mbl).ToList();
 
       var moviesRecommended = 0;      
       var firstNRecommendationsPrecision = 0;
       var lastNRecommendationsPrecision = 0;
       var moviesByLabelEnumerator = moviesByLabel.GetEnumerator();
 
-      var nextNMovies = ratingsNotIncluded.OrderBy(rni => rni.timestamp).Take(predict_next_n_movies).Select(rni => rni.movie).ToList();
+      var nextNMovies = ratingsNotIncluded.OrderBy(rni => rni.timestamp).Take(2 * predict_next_n_movies).Select(rni => rni.movie).ToList();
 
       while (moviesRecommended < 2 * predict_next_n_movies && (firstNRecommendationsPrecision + lastNRecommendationsPrecision) < nextNMovies.Count)
       {

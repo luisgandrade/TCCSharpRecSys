@@ -20,20 +20,49 @@ namespace TCCSharpRecSys
     static void Main(string[] args)
     {
 
+      //FileReader.setDirPath("C:\\Users\\luis\\Documents\\Projetos\\tccsharprecsys\\Data\\");
+      //FileWritter.setDirPath("C:\\Users\\luis\\Documents\\Projetos\\tccsharprecsys\\Data\\");
+      //var fileReader = FileReader.getInstance();
+      //var fileWritter = FileWritter.getInstance();
 
-      var resultsAgg = new ResultsAggregator();
-      foreach (var cutoff in new[] { .3m, .5m, .8m })
-      {
-        resultsAgg.usersWithQuantityOfRatings(cutoff);
-      }
 
-      //if (args.Count() == 0)
-      //  throw new InvalidOperationException("Args faltando.");
+      //var tags = fileReader.readTags();
+      //var readSomConfig = fileReader.readAlgorithmConfig("som", "15_15_cosine_gaussian_15_369.269373068855_lr_0.11000t", 1);
 
-      ////try
-      ////{
-      //var cli = new CommandLineParser();
-      //var act = cli.parseCommands(File.ReadAllText(args[0]));
+      //var som = new SelfOrganizingMap(15, 15, 1127, new GaussianNeighborhood(15), new LearningRateFunction(), new CosineSimilarity(), true);
+      //som.parse_classifier(readSomConfig);
+
+      //var x = new List<Tuple<int, int, string>>();
+
+      //for (int i = 0; i < 15; i++)
+      //{
+      //  for (int j = 0; j < 15; j++)
+      //  {
+      //    var neuron = som.getNeuron(i, j);
+      //    var attrsComPesos = neuron.weights.Select((w, index) => new { attr = index, peso = w }).OrderByDescending(w => w.peso)
+      //                                      .Join(tags, w => w.attr, t => t.id, (w, t) => t.tag);
+      //    x.Add(new Tuple<int, int, string>(i, j, string.Join(", ", attrsComPesos.Take(5))));
+      //  }
+      //}
+
+      //var a = 1;
+
+
+
+
+      //var resultsAgg = new ResultsAggregator();
+      //foreach (var cutoff in new[] { .3m, .5m, .8m })
+      //{
+      //  resultsAgg.usersWithQuantityOfRatings(cutoff);
+      //}
+      //resultsAgg.simpleAggregate("som");
+      if (args.Count() == 0)
+        throw new InvalidOperationException("Args faltando.");
+
+      //try
+      //{
+      var cli = new CommandLineParser();
+      var act = cli.parseCommands(File.ReadAllText(args[0]));
 
 
       ////var tagRelevances = FileReader.getInstance().readTagRelevances();
@@ -46,12 +75,12 @@ namespace TCCSharpRecSys
       ////FileWritter.getInstance().writeTagRel(t2.Select(t => t.tagRel).ToList());
 
 
-      //foreach (var a in act)
-      //{
-      //  a.Invoke();
-      //}
+      foreach (var a in act)
+      {
+        a.Invoke();
+      }
 
-      //Console.ReadKey();
+      Console.ReadKey();
 
 
       //var fileReader = FileReader.getInstance();

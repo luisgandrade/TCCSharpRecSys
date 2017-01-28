@@ -33,5 +33,13 @@ namespace TCCSharpRecSys
       }
       file_writter.writeUsersWithQuantityOfRatings(cutoff, userRatings);
     }
+
+    public void simpleAggregate(string sub_dir)
+    {
+      var recResults = file_reader.readResults(sub_dir);
+      var x = recResults.SelectMany(r => r.Value.Where(r1 => r1.first_n_recommendations_precision > 0)).Count();
+      var y = recResults.SelectMany(r => r.Value.Where(r1 => r1.last_n_recommendations_precision > 0)).Count();
+      Console.WriteLine("ashusahasas");
+    }
   }
 }

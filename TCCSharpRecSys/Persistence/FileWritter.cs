@@ -18,9 +18,7 @@ namespace TCCSharpRecSys.Persistence
 
     private static string dir_path;
 
-    private static FileWritter file_writter;    
-
-    private object resource_lock;
+    private static FileWritter file_writter;        
 
     private FileWritter()
     {

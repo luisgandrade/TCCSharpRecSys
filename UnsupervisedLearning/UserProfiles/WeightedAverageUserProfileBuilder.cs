@@ -3,15 +3,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnsupervisedLearning;
+using UnsupervisedLearning.UserProfiles;
 
-namespace TCCSharpRecSys
+namespace MachineLearning.UserProfiles
 {
-  public class UserProfileBuilder
+  public class WeightedAverageUserProfileBuilder : IUSerProfileBuilder
   {
     /// <summary>
     /// Fórmula de decaímento dos pesos ao decorrer do tempo.
     /// </summary>
     private IDecayFormula decay_formula;
+
+    public string label
+    {
+      get
+      {
+        return decay_formula.decay_display;
+      }
+    }
 
     /// <summary>
     /// Constróis os <see cref="UserProfile"/> dos usuários que possuem um número suficiente de <see cref="Rating"/>s.  Os <see cref="Rating"/>s
@@ -38,14 +47,14 @@ namespace TCCSharpRecSys
         var trainingRatings = userRatings.OrderBy(ur => ur.timestamp).Take((int)(trainingCutoff * userRatings.Count()));
 
         var ratingAverage = trainingRatings.Average(rat => rat.rating);
-        var minRating = trainingRatings.Min(tr => tr.rating - ratingAverage);
-        var maxMinusMinRating = trainingRatings.Max(rat => rat.rating - ratingAverage) - minRating;
+        var minRating = trainingRatings.Min(tr => tr.rating);
+        var maxMinusMinRating = trainingRatings.Max(rat => rat.rating) - minRating;
 
         var lastTimestamp = trainingRatings.Max(tr => tr.timestamp);
 
         var profile = trainingRatings.Join(tagRelevances, trat => trat.movie, trel => trel.movie, (trat, trel) => new
         {
-          normalizedRating = ((trat.rating - ratingAverage) - minRating) / maxMinusMinRating * 2 - 1, //normaliza no intervalo 0 a 1 e translada e escala para o intervalo -1 a 1          
+          normalizedRating = (trat.rating - minRating) / maxMinusMinRating,
           relativeRatingAge = (lastTimestamp - trat.timestamp).Duration(), //idade da avaliação relativa
           tag = trel.tag,
           relevance = trel.relevance
@@ -64,7 +73,7 @@ namespace TCCSharpRecSys
       return userProfiles;
     }
 
-    public UserProfileBuilder(IDecayFormula decayFormula)
+    public WeightedAverageUserProfileBuilder(IDecayFormula decayFormula)
     {
       if (decayFormula == null)
         throw new ArgumentException("decayFormula");

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TCCSharpRecSys
+namespace UnsupervisedLearning.UserProfiles
 {
   public class ExponentialDecay : IDecayFormula
   {

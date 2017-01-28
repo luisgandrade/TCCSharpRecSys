@@ -22,9 +22,9 @@ namespace UnsupervisedLearning
 
     public UserProfile(int user_id, IList<double> profile)
     {
-      if (profile == null)
-        throw new ArgumentException("profile");
 
+      if (profile.Any(p => p < 0 || p > 1))
+        throw new InvalidOperationException("Algum valor do perfil não se encontra no intervalo de 0 a 1.");
       this.user_id = user_id;
       this.profile = profile;
     }

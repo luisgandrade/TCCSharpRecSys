@@ -2,19 +2,19 @@
 
 namespace UnsupervisedLearning.UserProfiles
 {
-  public class LinearDecay : IDecayFormula
+  public class NoDecay : IDecayFormula
   {
     public string decay_display
     {
       get
       {
-        return "linear";
+        return "constant";
       }
     }
 
     public double decay(TimeSpan relativeAge)
     {
-      return relativeAge != TimeSpan.Zero ? 1 - 7 * 24 * 3600 / relativeAge.TotalSeconds : 1;
+      return 1;
     }
   }
 }

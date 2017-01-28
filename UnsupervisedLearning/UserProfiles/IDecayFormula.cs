@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TCCSharpRecSys
+namespace UnsupervisedLearning.UserProfiles
 {
   /// <summary>
   /// Fornece uma interface para cálculo de decaimento de peso da avaliação de um usuário para um filme.

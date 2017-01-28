@@ -40,11 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExpectationMaximization\ExpecationMaximization.cs" />
-    <Compile Include="ExpectationMaximization\GaussianDistribution.cs" />
-    <Compile Include="ExpectationMaximization\MixtureModel\GaussianMixtureModel.cs" />
-    <Compile Include="ExpectationMaximization\MixtureModel\IDistribution.cs" />
-    <Compile Include="ExpectationMaximization\MixtureModel\IMixtureModel.cs" />
     <Compile Include="IClassLabel.cs" />
     <Compile Include="IMovieClassification.cs" />
     <Compile Include="Instance.cs" />
@@ -66,8 +61,11 @@
     <Compile Include="UserProfile.cs" />
     <Compile Include="UserProfiles\ExponentialDecay.cs" />
     <Compile Include="UserProfiles\IDecayFormula.cs" />
+    <Compile Include="UserProfiles\IUSerProfileBuilder.cs" />
     <Compile Include="UserProfiles\LinearDecay.cs" />
-    <Compile Include="UserProfiles\UserProfileBuilder.cs" />
+    <Compile Include="UserProfiles\NoDecay.cs" />
+    <Compile Include="UserProfiles\NormalizedUserProfileBuilder.cs" />
+    <Compile Include="UserProfiles\WeightedAverageUserProfileBuilder.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

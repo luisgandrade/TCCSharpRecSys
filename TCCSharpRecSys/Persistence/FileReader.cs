@@ -151,7 +151,7 @@ namespace TCCSharpRecSys.Persistence
     public IList<int> getPartsOfProfiles(double cutoff)
     {
       var files = Directory.GetFiles(dir_path + "profiles");
-      var regex = new Regex("exponential_" + cutoff + "_pt([0-9])+\\.csv");
+      var regex = new Regex("constant_" + cutoff + "_pt([0-9])+\\.csv");
       var pts = new List<int>();
       foreach (var file in files)
       {
@@ -306,31 +306,34 @@ namespace TCCSharpRecSys.Persistence
       return classLabelsStr;
     }
     
+    public IList<KeyValuePair<string, IList<RecommendationResults>>> readResults(string sub_dir)
+    {
 
-    //public IList<Tuple<int, int, List<double>>> existingNeurons(int rows, int columns, string metric, string neighborhood, int instance)
+      var files = Directory.GetFiles(dir_path + sub_dir + "\\recommend");
+      var results = new List<KeyValuePair<string, IList<RecommendationResults>>>();
+      foreach (var file in files)
+      {
+        reader = new StreamReader(file);
+        var recomendationResults = new List<RecommendationResults>();
+        while (!reader.EndOfStream)
+        {
+          var args = reader.ReadLine().Split(',');
+          var user_id = int.Parse(args[0]);
+          var n_ratings = int.Parse(args[1]);
+          var first_n = int.Parse(args[2]);
+          var last_n = int.Parse(args[3]);
 
-    //{
-    //  reader = new StreamReader(dir_path + "som_nodes\\" + rows + "_" + columns + "_" + metric + "_" + neighborhood + "_" + instance + ".csv"); ;
+          var recResults = new RecommendationResults(new UserProfile(user_id, null), n_ratings, first_n, last_n);
+          recomendationResults.Add(recResults);
+        }
+        reader.Close();
+        results.Add(new KeyValuePair<string, IList<RecommendationResults>>(file, recomendationResults));
+      }
+      
 
-    //  var nodes = new List<Tuple<int, int, List<double>>>();
-
-    //  reader.ReadLine();
-    //  while (!reader.EndOfStream)
-    //  {
-    //    var line = reader.ReadLine();
-    //    var split = line.Split(',');
-
-    //    var coordinates = split[0].Trim('[', ']').Split(';');
-
-    //    var nodesWeightsString = split[1].Trim('[', ']').Split(';');
-
-    //    var nodesWeights = nodesWeightsString.Select(nws => double.Parse(nws)).ToList();
-
-    //    nodes.Add(new Tuple<int, int, List<double>>(int.Parse(coordinates[0]), int.Parse(coordinates[1]), nodesWeights));
-    //  }
-
-    //  return nodes;
-    //}
+      return results;
+    }
+    
 
   }
 }

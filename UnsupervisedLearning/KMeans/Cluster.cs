@@ -51,6 +51,13 @@ namespace UnsupervisedLearning.KMeans
       if (other == null)
         return false;
       return this.id == other.id;
-    }    
+    }
+
+    public bool Equals(IClassLabel other)
+    {
+      if (other == null || !(other is Cluster))
+        return false;
+      return this.Equals((Cluster)other);
+    }
   }
 }

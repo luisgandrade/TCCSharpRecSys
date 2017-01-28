@@ -10,13 +10,13 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
   /// </summary>
   public class Neuron : IClassLabel
   {
-    internal int x { get; private set; }
+    public int x { get; private set; }
 
-    internal int y { get; private set; }
+    public int y { get; private set; }
     /// <summary>
     /// Pesos nas entradas desse neurônio. 
     /// </summary>
-    internal IList<double> weights { get; private set; }
+    public IList<double> weights { get; private set; }
     
     internal Neuron(int x, int y, IList<double> weights)
     {
@@ -71,6 +71,13 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
       if (other == null)
         return false;
       return this.x == other.x && this.y == other.y; 
+    }
+
+    public bool Equals(IClassLabel other)
+    {
+      if (other == null || !(other is Neuron))
+        return false;
+      return this.Equals((Neuron)other);
     }
   }
 }

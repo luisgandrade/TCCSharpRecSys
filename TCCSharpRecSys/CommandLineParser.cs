@@ -1,4 +1,5 @@
 ﻿using Lib;
+using MachineLearning.UserProfiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,7 @@ using UnsupervisedLearning.SelfOrganizingMaps;
 using UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions;
 using UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions;
 using UnsupervisedLearning.SelfOrganizingMaps.Network;
+using UnsupervisedLearning.UserProfiles;
 using Utils;
 using Utils.Metric;
 
@@ -339,14 +341,20 @@ namespace TCCSharpRecSys
       if (decay == null)
         throw new ArgumentException("decay");
 
-      IDecayFormula decayFormula = null;
+      IUSerProfileBuilder userProfileBuilder = null;
       switch (decay)
       {
         case "exp":
-          decayFormula = new ExponentialDecay();
+          userProfileBuilder = new WeightedAverageUserProfileBuilder(new ExponentialDecay());
           break;
         case "linear":
-          decayFormula = new LinearDecay();
+          userProfileBuilder = new WeightedAverageUserProfileBuilder(new LinearDecay());          
+          break;
+        case "no":
+          userProfileBuilder = new WeightedAverageUserProfileBuilder(new NoDecay());
+          break;
+        case "normal":
+          userProfileBuilder = new NormalizedUserProfileBuilder();
           break;
         default:
           throw new InvalidOperationException("Forma de decay das avaliações não existe.");
@@ -355,12 +363,11 @@ namespace TCCSharpRecSys
       {
         var fileReader = FileReader.getInstance();
         var tagRelevances = fileReader.readTagRelevances();        
-
-        var userProfileBuilder = new UserProfileBuilder(decayFormula);
+        
         var fileWritter = FileWritter.getInstance();
 
-        Console.WriteLine("Construindo perfis de usuários. Porcentagem de corte: " + cutoff + ". Decaimento: " + decayFormula.decay_display);
-        fileWritter.log("Construindo perfis de usuários. Porcentagem de corte: " + cutoff + ". Decaimento: " + decayFormula.decay_display, true);
+        Console.WriteLine("Construindo perfis de usuários. Porcentagem de corte: " + cutoff + ". Decaimento: " + userProfileBuilder.label);
+        fileWritter.log("Construindo perfis de usuários. Porcentagem de corte: " + cutoff + ". Decaimento: " + userProfileBuilder.label, true);
         var start = DateTime.Now;
         var pts = fileReader.getPartsOfRatings();
         foreach (var pt in pts)
@@ -368,13 +375,13 @@ namespace TCCSharpRecSys
           var ratings = fileReader.readUserRatings(pt);          
           var userProfiles =  userProfileBuilder.buildUserProfiles(ratings, tagRelevances, cutoff);
           Console.WriteLine("Escrevendo perfis dos usuários... [" + ((pt - 1) * 20000) + " a " + (pt * 20000 - 1) + "]");
-          fileWritter.appendUserProfiles(decayFormula.decay_display + "_" + cutoff + "_" + "pt" + pt + ".csv", userProfiles);
+          fileWritter.appendUserProfiles(userProfileBuilder.label + "_" + cutoff + "_" + "pt" + pt + ".csv", userProfiles);
           userProfiles = null;
         }
         var end = DateTime.Now;
         var duration = end - start;
-        Console.WriteLine("Construção de perfis de usuários finalizada. Porcentagem de corte: " + cutoff + ". Decaimento: " + decayFormula.decay_display + ". Tempo de execução: " + duration.TotalHours + "h" + duration.TotalMinutes + "min");
-        fileWritter.log("Construção de perfis de usuários finalizada. Porcentagem de corte: " + cutoff + ". Decaimento: " + decayFormula.decay_display + ". Tempo de execução: " + duration.TotalHours + "h" + duration.TotalMinutes + "min", true);
+        Console.WriteLine("Construção de perfis de usuários finalizada. Porcentagem de corte: " + cutoff + ". Decaimento: " + userProfileBuilder.label + ". Tempo de execução: " + duration.TotalHours + "h" + duration.TotalMinutes + "min");
+        fileWritter.log("Construção de perfis de usuários finalizada. Porcentagem de corte: " + cutoff + ". Decaimento: " + userProfileBuilder.label + ". Tempo de execução: " + duration.TotalHours + "h" + duration.TotalMinutes + "min", true);
       };
       
     }
