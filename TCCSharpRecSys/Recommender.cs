@@ -27,7 +27,7 @@ namespace TCCSharpRecSys
       if (ratingsNotIncluded == null)
         throw new ArgumentException("ratingsNotIncluded");
 
-      var bestMatchingClasses = algorithm.best_matching_units(userProfile).ToList();
+      var bestMatchingClasses = algorithm.best_matching_units(userProfile, 30).ToList();
 
       var moviesByLabel = new List<Movie>();
       foreach (var bmc in bestMatchingClasses)

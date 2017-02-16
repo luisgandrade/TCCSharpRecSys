@@ -10,15 +10,15 @@ namespace TCCSharpRecSys
   public class ResultsAggregator
   {
 
-    private FileWritter file_writter;
+    private FileWriter file_writter;
     private FileReader file_reader;
 
     public ResultsAggregator()
     {
       FileReader.setDirPath("C:\\Users\\luis\\Documents\\Projetos\\tccsharprecsys\\Data\\");
-      FileWritter.setDirPath("C:\\Users\\luis\\Documents\\Projetos\\tccsharprecsys\\Data\\");
+      FileWriter.setDirPath("C:\\Users\\luis\\Documents\\Projetos\\tccsharprecsys\\Data\\");
       file_reader = FileReader.getInstance();
-      file_writter = FileWritter.getInstance();      
+      file_writter = FileWriter.getInstance();      
     }
     
     public void usersWithQuantityOfRatings(decimal cutoff)

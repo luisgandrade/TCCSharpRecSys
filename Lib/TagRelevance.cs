@@ -7,9 +7,7 @@
 
     public Tag tag { get; private set; }
 
-    public double relevance { get; private set; }
-
-    public double? normalized_relevance { get; set; }
+    public double relevance { get; private set; }    
 
     public TagRelevance(Movie movie, Tag tag, double relevance)
     {

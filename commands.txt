@@ -1,2 +1,9 @@
 set_dir C:\Users\luis\Documents\Projetos\tccsharprecsys\Data\
-profiles ct=0.5 normal
+train som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,5 tag_pop=25
+train som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,5 tag_pop=50
+classify som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,5 tag_pop=25
+classify som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,5 tag_pop=50
+train cl=100 instances=1,5 tag_pop=25
+train cl=100 instances=1,5 tag_pop=50
+classify cl=100 instances=1,5 tag_pop=25
+classify cl=100 instances=1,5 tag_pop=50

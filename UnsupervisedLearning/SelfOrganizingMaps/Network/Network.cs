@@ -115,6 +115,20 @@ namespace UnsupervisedLearning.SelfOrganizingMaps.Network
                     .Select(n => n.neuron);
     }
 
+    internal IEnumerable<Neuron> classifyInstance(IList<KeyValuePair<int, double>> profileAttributes)
+    {
+      if (profileAttributes == null)
+        throw new ArgumentException("profileAttributes");
+
+      return neurons.SelectMany(n1 => n1.Select(n2 => new
+      {
+        neuron = n2,
+        distance = metric.applyMetric(profileAttributes.Select(pa => pa.Value).ToList(), profileAttributes.Select(pa => n2.weights[pa.Key]).ToList())
+      })).OrderBy(n => n.distance)
+         .Select(n => n.neuron);
+
+    }
+
     /// <summary>
     /// Retorna um enumerável com as linhas a serem impressas no arquivo, onde cada linha representa um neurônio na rede.
     /// </summary>

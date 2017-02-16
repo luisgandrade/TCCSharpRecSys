@@ -78,11 +78,11 @@ namespace TCCSharpRecSys.Persistence
     {
       if (movies_read.Any())
         return movies_read;
-      reader = new StreamReader(dir_path + "movies.csv");
+      reader = new StreamReader(dir_path + "movies.dat");
 
       var movies = new List<Movie>();
 
-      var regex = new Regex("^([0-9]+),\\s?\"(.+?)\",\\s?([0-9]{4}),\\s?([0-9]+)$");
+      var regex = new Regex("^([0-9]+)\\s+(.+)\\s+\\(([0-9]{4})\\)\\s+([0-9]+)$");
 
       while (!reader.EndOfStream)
       {
@@ -101,6 +101,74 @@ namespace TCCSharpRecSys.Persistence
 
       movies_read = movies;
       return movies;
+    }
+
+    public IList<Tag> readTags(int tagPopularity)
+    {
+      if (tags_read.Any())
+        return tags_read;
+      reader = new StreamReader(dir_path + "tags.dat");
+
+      var tags = new List<Tag>();
+      var regex = new Regex("^([0-9]+)\\s(.+?)\\s([0-9]+)$");
+      while (!reader.EndOfStream)
+      {
+        var line = reader.ReadLine();
+
+        var match = regex.Match(line);
+
+        var id = int.Parse(match.Groups[1].Value);
+        var tag = match.Groups[2].Value;
+        var count = int.Parse(match.Groups[3].Value);
+        
+        if(count >= tagPopularity)
+          tags.Add(new Tag(id, tag, count));
+      }
+
+      reader.Close();
+      reader = null;
+
+      tags_read = tags;
+
+      return tags;
+    }
+
+    public IList<TagRelevance> readTagRelevances(int tagPopularity)
+    {
+      if (tag_relevances_read.Any())
+        return tag_relevances_read;
+      if (!tags_read.Any())
+        readTags(tagPopularity);
+      if (!movies_read.Any())
+        readMovies();
+      reader = new StreamReader(dir_path + "tag_relevance.dat");
+
+
+      var tagRelInfo = new List<Tuple<int, int, double>>();
+      var regex = new Regex("^([0-9]+)\\s([0-9]+)\\s([0-1]\\.[0-9]+)$");
+      while (!reader.EndOfStream)
+      {
+        var line = reader.ReadLine();
+
+        var match = regex.Match(line);
+        
+        var movie_id = int.Parse(match.Groups[1].Value);
+        var tag_id = int.Parse(match.Groups[2].Value);
+        var relevance = double.Parse(match.Groups[3].Value);
+
+        tagRelInfo.Add(new Tuple<int, int, double>(movie_id, tag_id, relevance));
+      }
+
+      var tagRelevances = tagRelInfo.Join(tags_read, trim => trim.Item2, tr => tr.id, (trim, tr) => new { tag = tr, tagRel = trim})
+                                    .Join(movies_read, tri => tri.tagRel.Item1, mr => mr.id, (tri, mr) => new TagRelevance(mr, tri.tag, tri.tagRel.Item3)).ToList();
+
+      reader.Close();
+      reader = null;
+
+
+      tag_relevances_read = tagRelevances;
+
+      return tagRelevances;
     }
 
     public IList<int> getPartsOfRatings()
@@ -167,7 +235,7 @@ namespace TCCSharpRecSys.Persistence
 
       var profiles = new List<UserProfile>();
 
-      reader = new StreamReader(dir_path + "\\profiles\\exponential_" + cutoff + "_pt" + chunk + ".csv");
+      reader = new StreamReader(dir_path + "\\profiles\\constant_" + cutoff + "_pt" + chunk + ".csv");
 
       while (!reader.EndOfStream)
       {
@@ -183,77 +251,7 @@ namespace TCCSharpRecSys.Persistence
       return profiles;
     }
 
-    public IList<Tag> readTags()
-    {
-      if (tags_read.Any())
-        return tags_read;
-      reader = new StreamReader(dir_path + "tags.csv");
-
-      var tags = new List<Tag>();
-
-      while (!reader.EndOfStream)
-      {
-        var line = reader.ReadLine();
-        var properties = line.Split(',').ToList();
-
-        var id = int.Parse(properties[0]);
-        var tag = properties[1];
-        var occurences = int.Parse(properties[2]);
-        var average = double.Parse(properties[3]);
-        var std_dev = double.Parse(properties[4]);
-        
-        tags.Add(new Tag(id, tag, average, std_dev));
-      }
-
-      reader.Close();
-      reader = null;
-
-      tags_read = tags;
-
-      return tags;
-    }
-
-    public IList<TagRelevance> readTagRelevances()
-    {
-      if (tag_relevances_read.Any())
-        return tag_relevances_read;
-      if (!tags_read.Any())
-        readTags();
-      if (!movies_read.Any())
-        readMovies();
-      reader = new StreamReader(dir_path + "tag_relevance.csv");
-
-      
-      var tagRelInfo = new List<Tuple<int, int, double, double>>();
-      while (!reader.EndOfStream)
-      {
-        var line = reader.ReadLine();
-        var properties = line.Split(',');
-
-        var movie_id = int.Parse(properties[0]);
-        var tag_id = int.Parse(properties[1]);
-        var relevance = double.Parse(properties[2]);
-        var normalized_relevance = properties[3];
-        double parsedValue = 0;
-        double.TryParse(normalized_relevance, out parsedValue);
-
-        tagRelInfo.Add(new Tuple<int, int, double, double>(movie_id, tag_id, relevance, parsedValue));
-      }
-
-      var tagRelevances = tagRelInfo.Join(movies_read, tri => tri.Item1, mr => mr.id, (tri, mr) => new { movie = mr, tagRel = tri })
-                                    .Join(tags_read, trim => trim.tagRel.Item2, tr => tr.id, (trim, tr) => new TagRelevance(trim.movie, tr, trim.tagRel.Item3)
-                                    {
-                                      normalized_relevance = trim.tagRel.Item4
-                                    }).ToList();
-
-      reader.Close();
-      reader = null;
-
-
-      tag_relevances_read = tagRelevances;
-
-      return tagRelevances;
-    }
+    
 
     public IList<IMovieClassification> readMovieClassification(string algorithmDir, string filename, int instance, Func<Movie, string, IMovieClassification> classLabelParser)
     {

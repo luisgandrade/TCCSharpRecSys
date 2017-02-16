@@ -19,8 +19,11 @@ namespace TCCSharpRecSys
   {
     static void Main(string[] args)
     {
-
+      //var fileReader = FileReader.getInstance();
       //FileReader.setDirPath("C:\\Users\\luis\\Documents\\Projetos\\tccsharprecsys\\Data\\");
+      //var movies = fileReader.readMovies();
+      //var tags = fileReader.readTags(50);
+      //var tagRelevances = fileReader.readTagRelevances(50);
       //FileWritter.setDirPath("C:\\Users\\luis\\Documents\\Projetos\\tccsharprecsys\\Data\\");
       //var fileReader = FileReader.getInstance();
       //var fileWritter = FileWritter.getInstance();
@@ -61,7 +64,7 @@ namespace TCCSharpRecSys
 
       //try
       //{
-      var cli = new CommandLineParser();
+      var cli = new CommandLineParser(2);
       var act = cli.parseCommands(File.ReadAllText(args[0]));
 
 

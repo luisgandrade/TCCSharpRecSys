@@ -19,7 +19,7 @@ namespace UnsupervisedLearning.KMeans
 
     public int cluster_count { get; private set; }
 
-    public bool use_normalized_values { get; private set; }
+    public int attr_count { get; private set; }
     /// <summary>
     /// Clusters gerados.
     /// </summary>
@@ -51,7 +51,7 @@ namespace UnsupervisedLearning.KMeans
     {
       get
       {
-        return cluster_count + "_" + (use_normalized_values ? "t" : "f");
+        return cluster_count + "_" + attr_count;
       }
     }
 
@@ -68,7 +68,7 @@ namespace UnsupervisedLearning.KMeans
 
       instances.Shuffle();
       if (!clusters.Any())
-        clusters = instances.Take(cluster_count).Select((im, index) => new Cluster(index, im.getRelevances(use_normalized_values))).ToList();
+        clusters = instances.Take(cluster_count).Select((im, index) => new Cluster(index, im.tag_relevances.Select(tr => tr.relevance).ToList())).ToList();
       
       var continueTraining = true;
       do
@@ -89,7 +89,7 @@ namespace UnsupervisedLearning.KMeans
       } while (continueTraining);      
     }
 
-    public IEnumerable<IMovieClassification> classify_instances(IList<Instance> tagRelevances)
+    public IEnumerable<IMovieClassification> classify_instances(IList<Instance> tagRelevances, int number_of_attributes)
     {
       if (tagRelevances == null)
         throw new ArgumentException("tagRelevances");
@@ -98,7 +98,9 @@ namespace UnsupervisedLearning.KMeans
 
       foreach (var instance in tagRelevances)
       {
-        var bestFitCluster = clusters.WhereMin(cl => EuclidianDistance.distance(instance.getRelevances(use_normalized_values), cl.centroid));
+        var bestAttributes = instance.tag_relevances.Select(tr => tr.relevance).Select((tr, index) => new KeyValuePair<int, double>(index, tr))
+                                                                               .OrderByDescending(tr => tr.Value).Take(number_of_attributes).ToList();
+        var bestFitCluster = clusters.WhereMin(cl => EuclidianDistance.distance(bestAttributes.Select(ba => ba.Value).ToList(), bestAttributes.Select(ba => cl.centroid[ba.Key]).ToList()));
         moviesClassification.Add(new KMeansMovieClassification(instance.movie, bestFitCluster));
       }
 
@@ -110,7 +112,7 @@ namespace UnsupervisedLearning.KMeans
       return clusters.Select(cl => cl.id + "," + string.Join(",", cl.centroid.Select(c => c.ToString()).ToList()));
     }
 
-    public IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile)
+    public IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile, int number_of_attributes)
     {
       return clusters.OrderBy(cl => EuclidianDistance.distance(userProfile.profile, cl.centroid)).Cast<IClassLabel>().ToList();
     }
@@ -149,11 +151,11 @@ namespace UnsupervisedLearning.KMeans
     }
 
     /// <param name="initialMeans">instâncias do dataset serão usadas para criação dos clusters</param>
-    public StandardKMeans(int clusterCount, bool useNormalizedValues)
+    public StandardKMeans(int clusterCount, int attrCount)
     {
       clusters = new List<Cluster>();
       cluster_count = clusterCount;
-      use_normalized_values = useNormalizedValues;
+      attr_count = attrCount;
     }
   }
 }

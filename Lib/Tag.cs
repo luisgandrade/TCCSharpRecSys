@@ -10,27 +10,21 @@ namespace Lib
   {    
     public int id { get; private set; }
 
-    public string tag { get; private set; }
+    public string tag { get; private set; }    
 
-    public double population_average { get; set; }
+    public int count { get; private set; }
 
-    public double population_standard_deviation { get; set; }
-
-    public Tag(int id, string tag)
+    public Tag(int id, string tag, int count)
     {
       if (tag == null)
         throw new ArgumentException("tag");
       
       this.id = id;
       this.tag = tag;
+      this.count = count;
+      
     }
-
-    public Tag(int id, string tag, double population_average, double population_standard_deviation)
-      :this(id, tag)
-    {            
-      this.population_average = population_average;
-      this.population_standard_deviation = population_standard_deviation;
-    }
+    
 
   }
 }

@@ -26,14 +26,14 @@ namespace UnsupervisedLearning
     /// </summary>
     /// <param name="instances">instâncias a serem classificadas</param>
     /// <returns></returns>
-    IEnumerable<IMovieClassification> classify_instances(IList<Instance> instances);
+    IEnumerable<IMovieClassification> classify_instances(IList<Instance> instances, int number_or_attributes);
     /// <summary>
     /// A implementação deste método deve retornar uma lista de <see cref="IClassLabel"/> ordenadas por uma
     /// distância entre o <see cref="UserProfile"/> e o <see cref="IClassLabel"/>. 
     /// </summary>
     /// <param name="userProfile"></param>
     /// <returns></returns>
-    IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile);
+    IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile, int number_of_attributes);
     /// <summary>
     /// A implementação deste método deve retornar uma lista de string correspondente a cada uma das unidades de agrupamento do
     /// algoritmo.

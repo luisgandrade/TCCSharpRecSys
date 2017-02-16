@@ -13,24 +13,24 @@ using UnsupervisedLearning.SelfOrganizingMaps;
 
 namespace TCCSharpRecSys.Persistence
 {
-  public class FileWritter
+  public class FileWriter
   {
 
     private static string dir_path;
 
-    private static FileWritter file_writter;        
+    private static FileWriter file_writter;        
 
-    private FileWritter()
+    private FileWriter()
     {
     }
 
-    public static FileWritter getInstance()
+    public static FileWriter getInstance()
     {
       if (file_writter == null)
       {
         if (dir_path == null)
           throw new InvalidOperationException("Antes de instanciar o escritor de arquivos é necessário setar o caminho absolutos dos arquivos.");
-        file_writter = new FileWritter();
+        file_writter = new FileWriter();
       }
       return file_writter;
     }
@@ -59,11 +59,11 @@ namespace TCCSharpRecSys.Persistence
       using (var writter = new StreamWriter(dir_path + "tag_relevance.csv"))
       {
         foreach (var tagRel in tagRelevances)
-          writter.WriteLine(string.Join(",", tagRel.movie.id, tagRel.tag.id, tagRel.relevance, tagRel.normalized_relevance));
+          writter.WriteLine(string.Join(",", tagRel.movie.id, tagRel.tag.id, tagRel.relevance));
       }
     }
 
-    public void writeMovieClassifications(string sub_dir, string file_prefix, int instance, IEnumerable<IMovieClassification> moviesClassifications)
+    public void writeMovieClassifications(string sub_dir, string file_prefix, int instance, int n_attr, IEnumerable<IMovieClassification> moviesClassifications)
     {
       if (sub_dir == null)
         throw new ArgumentException("sub_dir");
@@ -77,7 +77,7 @@ namespace TCCSharpRecSys.Persistence
       if (!Directory.Exists(dir_path + sub_dir + "\\classify"))
         Directory.CreateDirectory(dir_path + sub_dir + "\\classify");
       
-      using (var writter = new StreamWriter(dir_path + sub_dir + "\\classify\\" + file_prefix + "_" + instance + ".csv"))
+      using (var writter = new StreamWriter(dir_path + sub_dir + "\\classify\\" + file_prefix + "_" + n_attr + "_" + instance + ".csv"))
       {
         foreach (var movieClassification in moviesClassifications)
           writter.WriteLine(movieClassification.print());
