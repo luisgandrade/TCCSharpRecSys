@@ -1,5 +1,6 @@
 ﻿using Lib;
 using MachineLearning.UserProfiles;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,8 @@ using UnsupervisedLearning.SelfOrganizingMaps.LearningRateFunctions;
 using UnsupervisedLearning.SelfOrganizingMaps.NeighborhoodFunctions;
 using UnsupervisedLearning.SelfOrganizingMaps.Network;
 using UnsupervisedLearning.UserProfiles;
+using UnsupervisedLearning.UserProfiles.Decay;
+using UnsupervisedLearning.UserProfiles.Normalization;
 using Utils;
 using Utils.Metric;
 
@@ -48,14 +51,14 @@ namespace TCCSharpRecSys
       FileReader.setDirPath(filePath);
       FileWriter.setDirPath(filePath);
 
-      var regexProfiles = new Regex("profiles ct=([0-9]+\\.[0-9]+) tag_pop=([0-9]+) (.*)");
+      var regexProfiles = new Regex("profiles ct=([0-9]+\\.[0-9]+) (.+?) (.+?) tag_pop=([0-9]+)");
 
       var commands = new List<Action>();
 
       var matchBuildUserProfile = commandLines.Where(cl => regexProfiles.IsMatch(cl)).Select(cl => new { commandLine = cl, match = regexProfiles.Match(cl) } );
       if(matchBuildUserProfile.Any())
-        commands.AddRange(matchBuildUserProfile.Select(mb => buildUserProfiles(double.Parse(mb.match.Groups[1].Value), mb.match.Groups[3].Value,
-          FileReader.getInstance().readTags(int.Parse(mb.match.Groups[2].Value)).Count)));        
+        commands.AddRange(matchBuildUserProfile.Select(mb => buildUserProfiles(double.Parse(mb.match.Groups[1].Value), mb.match.Groups[2].Value, mb.match.Groups[3].Value,
+          int.Parse(mb.match.Groups[4].Value))));        
 
       commands.AddRange(commandLines.Skip(1).Except(matchBuildUserProfile.Select(mb => mb.commandLine)).Select(cl => parseCommand(cl)).ToList());
       return commands;
@@ -86,6 +89,8 @@ namespace TCCSharpRecSys
           throw new NotSupportedException("Opção \"" + train(match.Groups[1].Value) + "\" não encontrada.");
       }
     }
+
+    
 
     private Action train(string args)
     {
@@ -148,7 +153,8 @@ namespace TCCSharpRecSys
       if (args == null)
         throw new ArgumentException("args");
 
-      var regex = new Regex("(.*?) n_attr=([0-9]+) instances=([1-9]+),([0-9]+) tag_pop=([0-9]+)");
+      var regex = new Regex("(.*?) instances=([1-9]+),([0-9]+) tag_pop=([0-9]+)");
+
 
       var match = regex.Match(args);
 
@@ -156,10 +162,9 @@ namespace TCCSharpRecSys
         throw new InvalidOperationException("Não foi possível parsear para classificação.");
 
       var algorithmInfo = match.Groups[1].Value;
-      var numberOfAttributes = int.Parse(match.Groups[2].Value);
-      var firstInstance = int.Parse(match.Groups[3].Value);
-      var lastInstance = int.Parse(match.Groups[4].Value);
-      var tagPopularity = int.Parse(match.Groups[5].Value);
+      var firstInstance = int.Parse(match.Groups[2].Value);
+      var lastInstance = int.Parse(match.Groups[3].Value);
+      var tagPopularity = int.Parse(match.Groups[4].Value);
 
       if (firstInstance > lastInstance)
         throw new ArgumentOutOfRangeException("O limite inferior do range é maior que o limite superior.");
@@ -208,7 +213,7 @@ namespace TCCSharpRecSys
               algorithm.parse_classifier(algorithmConfig);
               
               var start = DateTime.Now;
-              var movieClassifications = algorithm.classify_instances(instances, numberOfAttributes);
+              var movieClassifications = algorithm.classify_instances(instances, instances.First().tag_relevances.Count);
               var end = DateTime.Now;
 
 
@@ -216,7 +221,7 @@ namespace TCCSharpRecSys
                 Thread.Sleep(100);
               try
               {
-                fileWriter.writeMovieClassifications(algorithm.sub_dir, algorithm.file_prefix, i, numberOfAttributes, movieClassifications);
+                fileWriter.writeMovieClassifications(algorithm.sub_dir, algorithm.file_prefix, i, movieClassifications);
               }
               finally
               {
@@ -246,7 +251,7 @@ namespace TCCSharpRecSys
       if (args == null)
         throw new ArgumentException("args");
 
-      var regex = new Regex("(.*?) instances=([0-9]+),([0-9]+) tag_pop=([0-9]+) ct=(0\\.[1-9]) p=([0-9]+)");
+      var regex = new Regex("(.*?) instances=([0-9]+),([0-9]+) tag_pop=([0-9]+) ct=(0\\.[1-9]) (.*?) (.*?) p=([0-9]+)");
 
       var match = regex.Match(args);
 
@@ -258,7 +263,9 @@ namespace TCCSharpRecSys
       var lastInstance = int.Parse(match.Groups[3].Value);
       var tagPopularity = int.Parse(match.Groups[4].Value);
       var userProfileCutoff = double.Parse(match.Groups[5].Value);
-      var predictNextN = int.Parse(match.Groups[6].Value);
+      var decay = match.Groups[6].Value;
+      var normalization = match.Groups[7].Value;
+      var recommendN = int.Parse(match.Groups[8].Value);
 
       var attrCount = FileReader.getInstance().readTags(tagPopularity).Count;
 
@@ -277,7 +284,7 @@ namespace TCCSharpRecSys
           throw new InvalidOperationException("O comando deve classificar de acordo as instâncias de " + firstInstance + " até " + lastInstance + ". Porém, as " +
             "seguintes instâncias não foram encontradas em disco: " + string.Join(",", exisingTrainedModels.ToArray()));
         
-        var profileParts = fileReader.getPartsOfProfiles(userProfileCutoff);
+        var profileParts = fileReader.getPartsOfProfiles(decay, userProfileCutoff, normalization, attrCount);
 
         Func<int, int, Action> act = (first, last) =>
         {
@@ -299,6 +306,7 @@ namespace TCCSharpRecSys
               try
               {
                 trainedModel = fileReader.readAlgorithmConfig(newAlg.sub_dir, newAlg.file_prefix, i);
+                newAlg.parse_classifier(trainedModel);
                 moviesClassifications = fileReader.readMovieClassification(newAlg.sub_dir, newAlg.file_prefix, i, newAlg.parse_movie_classification());
               }              
               finally
@@ -309,7 +317,7 @@ namespace TCCSharpRecSys
               newAlg.parse_classifier(trainedModel);
               
               var moviesByLabel = moviesClassifications.GroupBy(mc => mc.label).ToDictionary(mc => mc.Key, mc => mc.Select(mc1 => mc1.movie).ToList());
-              var recommender = new Recommender(newAlg, moviesByLabel, predictNextN);
+              var recommender = new Recommender(newAlg, moviesByLabel, recommendN);
 
               var recResults = new List<RecommendationResults>();
               foreach (var pt in profileParts)
@@ -320,7 +328,7 @@ namespace TCCSharpRecSys
                   Thread.Sleep(100);
                 try
                 {
-                  usersProfiles = fileReader.readUserProfiles(userProfileCutoff, pt);
+                  usersProfiles = fileReader.readUserProfiles(decay, normalization, userProfileCutoff, attrCount, pt);
                   ratings = fileReader.readUserRatings(pt);
                 }
                 finally
@@ -333,10 +341,11 @@ namespace TCCSharpRecSys
                                                         {
                                                           userProfile = upr.userProfile,
                                                           moviesAlreadyWatched = upr.ratings.Take((int)(userProfileCutoff * upr.ratings.Count)).Select(r => r.movie),
-                                                          ratingsNotIncluded = upr.ratings.Skip((int)(userProfileCutoff * upr.ratings.Count))
+                                                          ratingsNotIncluded = upr.ratings.Skip((int)(userProfileCutoff * upr.ratings.Count)),
+                                                          ratingsAverage = upr.ratings.Average(r => r.rating)
                                                         });
                 foreach (var profile in profilesWithRatings)
-                  recResults.Add(recommender.recommend(profile.userProfile, profile.moviesAlreadyWatched.ToList(), profile.ratingsNotIncluded.ToList()));
+                  recResults.Add(recommender.recommend(profile.userProfile, profile.moviesAlreadyWatched.ToList(), profile.ratingsNotIncluded.ToList(), profile.ratingsAverage));
               }
               var end = DateTime.Now;
 
@@ -346,7 +355,7 @@ namespace TCCSharpRecSys
                 Thread.Sleep(100);
               try
               {
-                fileWriter.writeRecommendationResults(newAlg.sub_dir, newAlg.file_prefix, userProfileCutoff, predictNextN, i, recResults);
+                fileWriter.writeRecommendationResults(newAlg.sub_dir, newAlg.file_prefix, userProfileCutoff, decay, normalization, recommendN, i, recResults);
               }
               finally
               {
@@ -369,54 +378,90 @@ namespace TCCSharpRecSys
       };
     }
 
-    private Action buildUserProfiles(double cutoff, string decay, int tagPopularity)
+    private Action buildUserProfiles(double cutoff, string decay, string normalizationFunction, int tagPopularity)
     {
       if(cutoff <= 0 || cutoff >= 1)
         throw new ArgumentOutOfRangeException("O cutoff deve ser um valor maior que zero e menor que um.");
       if (decay == null)
         throw new ArgumentException("decay");
 
-      IUSerProfileBuilder userProfileBuilder = null;
+      
+      IDecayFormula decayFormula = null;
+      IRatingsNormalization ratingsNormalization = null;
       switch (decay)
       {
-        case "exp":
-          userProfileBuilder = new WeightedAverageUserProfileBuilder(new ExponentialDecay());
-          break;
-        case "linear":
-          userProfileBuilder = new WeightedAverageUserProfileBuilder(new LinearDecay());          
+        case "exponential":
+          decayFormula = new ExponentialDecay();
           break;
         case "no":
-          userProfileBuilder = new WeightedAverageUserProfileBuilder(new NoDecay());
-          break;
-        case "normal":
-          userProfileBuilder = new NormalizedUserProfileBuilder();
+          decayFormula = new NoDecay();
           break;
         default:
           throw new InvalidOperationException("Forma de decay das avaliações não existe.");
       }
+      switch (normalizationFunction)
+      {
+        case "feature_scaling":
+          ratingsNormalization = new FeatureScaling();
+          break;
+        default:
+          throw new InvalidOperationException("Forma de normalização de avaliações não existe.");
+      }
+
+      var userProfileBuilder = new WeightedAverageUserProfileBuilder(decayFormula, ratingsNormalization);
       return () =>
       {
         var fileReader = FileReader.getInstance();
-        var tagRelevances = fileReader.readTagRelevances(tagPopularity);        
-        
+        IList<TagRelevance> tagRelevances = null;
+        while (!Monitor.TryEnter(fileReader))
+          Thread.Sleep(100);
+        try
+        {
+          tagRelevances = fileReader.readTagRelevances(tagPopularity);
+        }
+        finally
+        {
+          Monitor.Exit(fileReader);
+        }
         var fileWriter = FileWriter.getInstance();
 
         Console.WriteLine("Construindo perfis de usuários. Porcentagem de corte: " + cutoff + ". Decaimento: " + userProfileBuilder.label);
-        fileWriter.log("Construindo perfis de usuários. Porcentagem de corte: " + cutoff + ". Decaimento: " + userProfileBuilder.label, true);
+
+        
+                
         var start = DateTime.Now;
         var pts = fileReader.getPartsOfRatings();
         foreach (var pt in pts)
         {          
-          var ratings = fileReader.readUserRatings(pt);          
+          IList<Rating> ratings = null;
+          while (!Monitor.TryEnter(fileReader))
+            Thread.Sleep(100);
+          try
+          {
+            ratings = fileReader.readUserRatings(pt);
+          }
+          finally
+          {
+            Monitor.Exit(fileReader);
+          }
           var userProfiles =  userProfileBuilder.buildUserProfiles(ratings, tagRelevances, cutoff);
           Console.WriteLine("Escrevendo perfis dos usuários... [" + ((pt - 1) * 20000) + " a " + (pt * 20000 - 1) + "]");
-          fileWriter.appendUserProfiles(userProfileBuilder.label + "_" + cutoff + "_" + "pt" + pt + ".csv", userProfiles);
+
+          while (!Monitor.TryEnter(fileWriter))
+            Thread.Sleep(100);
+          try
+          {
+            fileWriter.appendUserProfiles(userProfileBuilder.label + "_" + cutoff + "_" + "pt" + pt + ".csv", userProfiles);
+          }
+          finally
+          {
+            Monitor.Exit(fileWriter);
+          }
           userProfiles = null;
         }
         var end = DateTime.Now;
         var duration = end - start;
         Console.WriteLine("Construção de perfis de usuários finalizada. Porcentagem de corte: " + cutoff + ". Decaimento: " + userProfileBuilder.label + ". Tempo de execução: " + duration.TotalHours + "h" + duration.TotalMinutes + "min");
-        fileWriter.log("Construção de perfis de usuários finalizada. Porcentagem de corte: " + cutoff + ". Decaimento: " + userProfileBuilder.label + ". Tempo de execução: " + duration.TotalHours + "h" + duration.TotalMinutes + "min", true);
       };
       
     }
@@ -513,5 +558,9 @@ namespace TCCSharpRecSys
       var useNormalizedValues = match.Groups[2].Value == "true";
       return () => new StandardKMeans(clusterCount, attrCount);
     }
+    
+
+
+
   }
 }

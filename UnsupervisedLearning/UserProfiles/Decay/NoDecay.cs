@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnsupervisedLearning.UserProfiles
+namespace UnsupervisedLearning.UserProfiles.Decay
 {
   public class NoDecay : IDecayFormula
   {

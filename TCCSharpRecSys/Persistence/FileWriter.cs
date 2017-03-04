@@ -63,7 +63,7 @@ namespace TCCSharpRecSys.Persistence
       }
     }
 
-    public void writeMovieClassifications(string sub_dir, string file_prefix, int instance, int n_attr, IEnumerable<IMovieClassification> moviesClassifications)
+    public void writeMovieClassifications(string sub_dir, string file_prefix, int instance, IEnumerable<IMovieClassification> moviesClassifications)
     {
       if (sub_dir == null)
         throw new ArgumentException("sub_dir");
@@ -77,7 +77,7 @@ namespace TCCSharpRecSys.Persistence
       if (!Directory.Exists(dir_path + sub_dir + "\\classify"))
         Directory.CreateDirectory(dir_path + sub_dir + "\\classify");
       
-      using (var writter = new StreamWriter(dir_path + sub_dir + "\\classify\\" + file_prefix + "_" + n_attr + "_" + instance + ".csv"))
+      using (var writter = new StreamWriter(dir_path + sub_dir + "\\classify\\" + file_prefix + "_" + instance + ".csv"))
       {
         foreach (var movieClassification in moviesClassifications)
           writter.WriteLine(movieClassification.print());
@@ -124,7 +124,7 @@ namespace TCCSharpRecSys.Persistence
       if (!Directory.Exists(dir_path + "\\profiles"))
         Directory.CreateDirectory(dir_path + "\\profiles");
 
-      using (var writter = new StreamWriter(dir_path + filename, true))
+      using (var writter = new StreamWriter(dir_path + "\\profiles\\" + filename, true))
       {
         foreach (var profile in userProfile)
           writter.WriteLine(profile.user_id + profile.profile.Aggregate("", (acc, n) => acc + "," + n));
@@ -160,7 +160,8 @@ namespace TCCSharpRecSys.Persistence
     // user_id, filmes recomendados com match, numero de filmes para treino
     
 
-    public void writeRecommendationResults(string sub_dir, string file_prefix, double cutoff, int predictNextN, int instance, IList<RecommendationResults> recResults)
+    public void writeRecommendationResults(string sub_dir, string file_prefix, double cutoff, string decay, string normalization, int predictNextN, int instance, 
+      IList<RecommendationResults> recResults)
     {
       if (recResults == null)
         throw new ArgumentException("recResults");
@@ -174,10 +175,10 @@ namespace TCCSharpRecSys.Persistence
       if (!Directory.Exists(dir_path + sub_dir + "\\recommend"))
         Directory.CreateDirectory(dir_path + sub_dir + "\\recommend");
       
-      using (var writter = new StreamWriter(dir_path + sub_dir + "\\recommend\\" + file_prefix + "_" + cutoff + "_" + predictNextN + "_" + instance + ".csv"))
+      using (var writter = new StreamWriter(dir_path + sub_dir + "\\recommend\\" + file_prefix + "_" + cutoff + "_" + decay + "_" + normalization + "_" + predictNextN + "_" + instance + ".csv"))
       {
         foreach (var result in recResults)
-          writter.WriteLine(result.user.user_id + "," + result.number_of_ratings + "," + result.first_n_recommendations_precision + "," + result.last_n_recommendations_precision);
+          writter.WriteLine(result.user.user_id + "," + result.number_of_ratings + "," + result.number_of_correct_predictions);
       }
     }
 
@@ -188,6 +189,16 @@ namespace TCCSharpRecSys.Persistence
       {
         foreach (var user in usersAndRatings)
           writter.WriteLine(user.Item1 + "," + user.Item2 + "," + user.Item3);
+      }
+    }
+
+
+    public void writeRatings(IList<Rating> ratings, int chunk)
+    {
+      using (var writter = new StreamWriter(dir_path + "ratings_pt" + chunk + ".csv"))
+      {
+        foreach (var rating in ratings)
+          writter.WriteLine(rating.movie.id + "," + rating.user_id + "," + rating.rating + "," + (rating.timestamp - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds);
       }
     }
 

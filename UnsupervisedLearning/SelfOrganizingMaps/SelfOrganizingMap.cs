@@ -103,10 +103,20 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
                       .Cast<IMovieClassification>().ToList();
     }
 
+    public IEnumerable<IMovieClassification> classify_instances(IList<Instance> instances)
+    {
+      return instances.Select(ins => new SOMMovieClassification(ins.movie, network.classifyInstance(ins.tag_relevances.Select(tr => tr.relevance).ToList()).First()));
+    }
+
     public IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile, int number_of_attributes)
     {
       return network.classifyInstance(userProfile.profile.Select((p, index) => new KeyValuePair<int, double>(index, p)).OrderByDescending(p => p.Value).Take(number_of_attributes).ToList())
                     .Cast<IClassLabel>().ToList();
+    }
+
+    public IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile)
+    {
+      return network.classifyInstance(userProfile.profile).ToList();
     }
 
     public void train(IList<Instance> instances)
@@ -160,7 +170,7 @@ namespace UnsupervisedLearning.SelfOrganizingMaps
         network.neurons[x][y] = new Neuron(x, y, parsedWeights.ToList());
       }
     }
-
+    
     public SelfOrganizingMap(int rows, int columns, int attr_count, INeighborhoodFunction neighborhoodFunction, ILearningRateFunction learningRateFunction, IMetric metric)
     {
       if (neighborhoodFunction == null)

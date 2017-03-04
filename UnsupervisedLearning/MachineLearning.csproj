@@ -59,12 +59,12 @@
     <Compile Include="SelfOrganizingMaps\Network\Neuron.cs" />
     <Compile Include="SelfOrganizingMaps\SelfOrganizingMap.cs" />
     <Compile Include="UserProfile.cs" />
-    <Compile Include="UserProfiles\ExponentialDecay.cs" />
-    <Compile Include="UserProfiles\IDecayFormula.cs" />
+    <Compile Include="UserProfiles\Decay\ExponentialDecay.cs" />
+    <Compile Include="UserProfiles\Normalization\FeatureScaling.cs" />
+    <Compile Include="UserProfiles\Decay\IDecayFormula.cs" />
+    <Compile Include="UserProfiles\Normalization\IRatingsNormalization.cs" />
     <Compile Include="UserProfiles\IUSerProfileBuilder.cs" />
-    <Compile Include="UserProfiles\LinearDecay.cs" />
-    <Compile Include="UserProfiles\NoDecay.cs" />
-    <Compile Include="UserProfiles\NormalizedUserProfileBuilder.cs" />
+    <Compile Include="UserProfiles\Decay\NoDecay.cs" />
     <Compile Include="UserProfiles\WeightedAverageUserProfileBuilder.cs" />
   </ItemGroup>
   <ItemGroup />

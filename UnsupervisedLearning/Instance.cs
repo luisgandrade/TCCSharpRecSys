@@ -14,9 +14,7 @@ namespace UnsupervisedLearning
   {
     public Movie movie { get; private set; }
 
-    public IList<TagRelevance> tag_relevances { get; private set; }
-
-    private IList<double> _relevances;
+    public IList<TagRelevance> tag_relevances { get; private set; }    
     
     public Instance(IList<TagRelevance> tag_relevances)
     {
@@ -25,7 +23,6 @@ namespace UnsupervisedLearning
 
       this.movie = tag_relevances.Select(tr => tr.movie).Distinct().Single();
       this.tag_relevances = tag_relevances.OrderBy(tr => tr.tag.id).ToList();
-      _relevances = this.tag_relevances.Select(tr => tr.relevance).ToList();
     }
   }
 }

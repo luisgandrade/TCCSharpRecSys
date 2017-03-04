@@ -60,7 +60,7 @@ namespace Utils
       }
 
       if(n > 1)
-        variance = 1.0 / n * (sumXSquared - 2.0 / n * sumX * sumX + 1.0 / n * sumX * sumX);
+        variance = 1.0 / n * (sumXSquared - 1.0 / n * sumX * sumX);
         
 
       return Math.Sqrt(variance);

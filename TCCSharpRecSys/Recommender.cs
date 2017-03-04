@@ -15,10 +15,10 @@ namespace TCCSharpRecSys
 
     public IDictionary<IClassLabel, List<Movie>> movies_by_label { get; private set; }
 
-    public int predict_next_n_movies { get; private set; }
+    public int recommend_n_movies { get; private set; }
 
 
-    public RecommendationResults recommend(UserProfile userProfile, IList<Movie> moviesAlreadyWatched, IList<Rating> ratingsNotIncluded)
+    public RecommendationResults recommend(UserProfile userProfile, IList<Movie> moviesAlreadyWatched, IList<Rating> ratingsNotIncluded, double ratingAverage)
     {
       if (userProfile == null)
         throw new ArgumentException("userProfile");
@@ -42,34 +42,27 @@ namespace TCCSharpRecSys
       //var moviesByLabel = bestMatchingClasses.Join(movies_by_label, bmc => bmc, mbl => mbl.Key, (bmc, mbl) => mbl.Value).SelectMany(mbl => mbl).ToList();
 
       var moviesRecommended = 0;      
-      var firstNRecommendationsPrecision = 0;
-      var lastNRecommendationsPrecision = 0;
+      var numberOfCorrectPredictions = 0;
       var moviesByLabelEnumerator = moviesByLabel.GetEnumerator();
+           
 
-      var nextNMovies = ratingsNotIncluded.OrderBy(rni => rni.timestamp).Take(2 * predict_next_n_movies).Select(rni => rni.movie).ToList();
-
-      while (moviesRecommended < 2 * predict_next_n_movies && (firstNRecommendationsPrecision + lastNRecommendationsPrecision) < nextNMovies.Count)
+      while (moviesRecommended < recommend_n_movies && numberOfCorrectPredictions < ratingsNotIncluded.Count)
       {
         moviesByLabelEnumerator.MoveNext();
         var movie = moviesByLabelEnumerator.Current;
         if (!moviesAlreadyWatched.Contains(movie))
         {
-          if (nextNMovies.Contains(movie))
-          {
-            if (moviesRecommended < predict_next_n_movies) 
-              firstNRecommendationsPrecision++;
-            else
-              lastNRecommendationsPrecision++;
-          }
+          if (ratingsNotIncluded.Any(r => r.movie == movie && r.rating > ratingAverage))
+            numberOfCorrectPredictions++;
           moviesRecommended++;
         }
       }
 
-      return new RecommendationResults(userProfile, moviesAlreadyWatched.Count + ratingsNotIncluded.Count, firstNRecommendationsPrecision, lastNRecommendationsPrecision);
+      return new RecommendationResults(userProfile, moviesAlreadyWatched.Count + ratingsNotIncluded.Count, numberOfCorrectPredictions);
     }
 
 
-    public Recommender(IUnsupervisedLearning algorithm, IDictionary<IClassLabel, List<Movie>> movies_by_label, int predict_next_n_movies)
+    public Recommender(IUnsupervisedLearning algorithm, IDictionary<IClassLabel, List<Movie>> movies_by_label, int recommend_next_n_movies)
     {
       if (algorithm == null)
         throw new ArgumentException("algorithm");
@@ -78,7 +71,7 @@ namespace TCCSharpRecSys
 
       this.algorithm = algorithm;
       this.movies_by_label = movies_by_label;
-      this.predict_next_n_movies = predict_next_n_movies;
+      this.recommend_n_movies = recommend_next_n_movies;
     }
   }
 }

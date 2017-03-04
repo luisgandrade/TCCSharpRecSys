@@ -107,12 +107,27 @@ namespace UnsupervisedLearning.KMeans
       return moviesClassification;
     }
 
+    public IEnumerable<IMovieClassification> classify_instances(IList<Instance> instances)
+    {
+      if (instances == null)
+        throw new ArgumentException("tagRelevances");      
+      
+      return instances.Select(ins => new KMeansMovieClassification(ins.movie,
+        clusters.WhereMin(cl => EuclidianDistance.distance(cl.centroid, ins.tag_relevances.Select(tr => tr.relevance).ToList()))));   
+    }
+
     public IEnumerable<string> printClassifier()
     {
       return clusters.Select(cl => cl.id + "," + string.Join(",", cl.centroid.Select(c => c.ToString()).ToList()));
     }
 
     public IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile, int number_of_attributes)
+    {
+      var bestAttributes = userProfile.profile.Select((p, index) => new { n_attr = index, attr = p }).OrderByDescending(p => p.attr);
+      return clusters.OrderBy(cl => EuclidianDistance.distance(bestAttributes.Select(ba => ba.attr).ToList(), bestAttributes.Select(ba => cl.centroid[ba.n_attr]).ToList())).ToList();
+    }
+
+    public IEnumerable<IClassLabel> best_matching_units(UserProfile userProfile)
     {
       return clusters.OrderBy(cl => EuclidianDistance.distance(userProfile.profile, cl.centroid)).Cast<IClassLabel>().ToList();
     }

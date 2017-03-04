@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnsupervisedLearning;
 using UnsupervisedLearning.UserProfiles;
+using UnsupervisedLearning.UserProfiles.Decay;
+using UnsupervisedLearning.UserProfiles.Normalization;
 
 namespace MachineLearning.UserProfiles
 {
@@ -14,11 +16,13 @@ namespace MachineLearning.UserProfiles
     /// </summary>
     private IDecayFormula decay_formula;
 
+    private IRatingsNormalization ratings_normalization;
+
     public string label
     {
       get
       {
-        return decay_formula.decay_display;
+        return decay_formula.decay_display + "_" + ratings_normalization.print;
       }
     }
 
@@ -42,30 +46,27 @@ namespace MachineLearning.UserProfiles
       
       var ratingsByUser = ratings.GroupBy(rat => rat.user_id);
       var userProfiles = new List<UserProfile>();
+
       foreach (var userRatings in ratingsByUser)
       {
-        var trainingRatings = userRatings.OrderBy(ur => ur.timestamp).Take((int)(trainingCutoff * userRatings.Count()));
-
-        var ratingAverage = trainingRatings.Average(rat => rat.rating);
-        var minRating = trainingRatings.Min(tr => tr.rating);
-        var maxMinusMinRating = trainingRatings.Max(rat => rat.rating) - minRating;
-
+        var trainingRatings = userRatings.OrderBy(ur => ur.timestamp).Take((int)(trainingCutoff * userRatings.Count())).ToList();        
+        var ratingsNormalizationFunction = ratings_normalization.setupNormalizationFunction(trainingRatings.Select(tr => tr.rating).ToList());
         var lastTimestamp = trainingRatings.Max(tr => tr.timestamp);
 
         var profile = trainingRatings.Join(tagRelevances, trat => trat.movie, trel => trel.movie, (trat, trel) => new
         {
-          normalizedRating = (trat.rating - minRating) / maxMinusMinRating,
-          relativeRatingAge = (lastTimestamp - trat.timestamp).Duration(), //idade da avaliação relativa
+          normalizedRating = ratingsNormalizationFunction(trat.rating),
+          ratingFreshness = decay_formula.decay((lastTimestamp - trat.timestamp).Duration()), //idade da avaliação relativa
           tag = trel.tag,
           relevance = trel.relevance
         }).GroupBy(tr => tr.tag)
           .Select(tr => new
           {
             tag = tr.Key,
-            //Média pondera das avaliações normalizadas atenuadas por um fator proporcional ao número de semanas da avaliação
-            value = tr.Sum(r => r.normalizedRating * r.relevance * decay_formula.decay(r.relativeRatingAge))
+            //Média ponderada das avaliações normalizadas atenuadas por um fator proporcional ao número de semanas da avaliação
+            value = tr.Sum(r => r.normalizedRating * r.relevance * r.ratingFreshness)
                     /
-                  tr.Sum(r => r.normalizedRating * decay_formula.decay(r.relativeRatingAge))
+                  tr.Sum(r => r.normalizedRating * r.ratingFreshness)
           });
 
         userProfiles.Add(new UserProfile(userRatings.Key, profile.OrderBy(pr => pr.tag.id).Select(pr => pr.value).ToList()));        
@@ -73,12 +74,15 @@ namespace MachineLearning.UserProfiles
       return userProfiles;
     }
 
-    public WeightedAverageUserProfileBuilder(IDecayFormula decayFormula)
+    public WeightedAverageUserProfileBuilder(IDecayFormula decayFormula, IRatingsNormalization ratingsNormalization)
     {
       if (decayFormula == null)
         throw new ArgumentException("decayFormula");
+      if (ratingsNormalization == null)
+        throw new ArgumentException("ratingsNormalization");
 
       decay_formula = decayFormula;
+      ratings_normalization = ratingsNormalization;
     }
   }
 }

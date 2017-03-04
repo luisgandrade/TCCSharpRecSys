@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnsupervisedLearning.UserProfiles
+namespace UnsupervisedLearning.UserProfiles.Decay
 {
   /// <summary>
   /// Fornece uma interface para cálculo de decaimento de peso da avaliação de um usuário para um filme.

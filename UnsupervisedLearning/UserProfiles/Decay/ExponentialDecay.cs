@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnsupervisedLearning.UserProfiles
+namespace UnsupervisedLearning.UserProfiles.Decay
 {
   public class ExponentialDecay : IDecayFormula
   {
@@ -14,7 +14,7 @@ namespace UnsupervisedLearning.UserProfiles
 
     public double decay(TimeSpan relativeAge)
     {
-      return relativeAge != TimeSpan.Zero ? Math.Exp(-(7 * 24 * 3600) / relativeAge.TotalSeconds) : 1;
+      return relativeAge.Days != 0 ? Math.Exp(-(7) / relativeAge.Days) : 1;
     }
   }
 }

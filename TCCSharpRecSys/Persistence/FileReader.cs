@@ -53,7 +53,7 @@ namespace TCCSharpRecSys.Persistence
     private IList<Tag> tags_read;
     private IList<TagRelevance> tag_relevances_read;
     private IList<IMovieClassification> movie_classification_read;
-
+    private int last_tag_pop = 0;
 
     public IList<int> existingInstances(string sub_dir, string file_prefix)
     {
@@ -104,11 +104,13 @@ namespace TCCSharpRecSys.Persistence
     }
 
     public IList<Tag> readTags(int tagPopularity)
-    {
-      if (tags_read.Any())
-        return tags_read;
+    {      
+      if (tags_read.Any())      
+        return tags_read.Where(tr => tr.count >= tagPopularity).ToList();
+      last_tag_pop = tagPopularity;
+        
       reader = new StreamReader(dir_path + "tags.dat");
-
+      tags_read = new List<Tag>();
       var tags = new List<Tag>();
       var regex = new Regex("^([0-9]+)\\s(.+?)\\s([0-9]+)$");
       while (!reader.EndOfStream)
@@ -121,29 +123,25 @@ namespace TCCSharpRecSys.Persistence
         var tag = match.Groups[2].Value;
         var count = int.Parse(match.Groups[3].Value);
         
-        if(count >= tagPopularity)
-          tags.Add(new Tag(id, tag, count));
+        tags_read.Add(new Tag(id, tag, count));
       }
 
       reader.Close();
-      reader = null;
+      reader = null;      
 
-      tags_read = tags;
-
-      return tags;
+      return tags_read.Where(tr => tr.count >= tagPopularity).ToList();
     }
 
     public IList<TagRelevance> readTagRelevances(int tagPopularity)
-    {
+    { 
       if (tag_relevances_read.Any())
-        return tag_relevances_read;
+        return tag_relevances_read.Where(tr => tr.tag.count >= tagPopularity).ToList();
       if (!tags_read.Any())
         readTags(tagPopularity);
       if (!movies_read.Any())
         readMovies();
       reader = new StreamReader(dir_path + "tag_relevance.dat");
-
-
+      
       var tagRelInfo = new List<Tuple<int, int, double>>();
       var regex = new Regex("^([0-9]+)\\s([0-9]+)\\s([0-1]\\.[0-9]+)$");
       while (!reader.EndOfStream)
@@ -159,21 +157,18 @@ namespace TCCSharpRecSys.Persistence
         tagRelInfo.Add(new Tuple<int, int, double>(movie_id, tag_id, relevance));
       }
 
-      var tagRelevances = tagRelInfo.Join(tags_read, trim => trim.Item2, tr => tr.id, (trim, tr) => new { tag = tr, tagRel = trim})
+      tag_relevances_read = tagRelInfo.Join(tags_read, trim => trim.Item2, tr => tr.id, (trim, tr) => new { tag = tr, tagRel = trim})
                                     .Join(movies_read, tri => tri.tagRel.Item1, mr => mr.id, (tri, mr) => new TagRelevance(mr, tri.tag, tri.tagRel.Item3)).ToList();
 
       reader.Close();
       reader = null;
-
-
-      tag_relevances_read = tagRelevances;
-
-      return tagRelevances;
+      
+      return tag_relevances_read.Where(trr => trr.tag.count >= tagPopularity).ToList();
     }
 
     public IList<int> getPartsOfRatings()
     {
-      var files = Directory.GetFiles(dir_path + "profiles");
+      var files = Directory.GetFiles(dir_path);
       var regex = new Regex("ratings_pt([0-9])+\\.csv");
       var pts = new List<int>();
       foreach (var file in files)
@@ -189,9 +184,9 @@ namespace TCCSharpRecSys.Persistence
     {      
       if (!movies_read.Any())
         readMovies();
-      if (!File.Exists(dir_path + "profiles\\ratings_pt" + chunk + ".csv"))
+      if (!File.Exists(dir_path + "ratings_pt" + chunk + ".csv"))
         throw new FileNotFoundException("Arquivo de ratings não existe.");
-      reader = new StreamReader(dir_path + "profiles\\ratings_pt" + chunk + ".csv");
+      reader = new StreamReader(dir_path + "ratings_pt" + chunk + ".csv");
 
       
       var ratingsInfo = new List<Tuple<int, int, double, DateTime>>();
@@ -216,10 +211,10 @@ namespace TCCSharpRecSys.Persistence
       return ratings;
     }
 
-    public IList<int> getPartsOfProfiles(double cutoff)
+    public IList<int> getPartsOfProfiles(string decay, double cutoff, string normalization, int attrCount)
     {
       var files = Directory.GetFiles(dir_path + "profiles");
-      var regex = new Regex("constant_" + cutoff + "_pt([0-9])+\\.csv");
+      var regex = new Regex(decay + "_" + normalization + "_" + cutoff +  "_" + attrCount + "_pt([0-9])+\\.csv");
       var pts = new List<int>();
       foreach (var file in files)
       {
@@ -230,12 +225,12 @@ namespace TCCSharpRecSys.Persistence
       return pts;
     }
 
-    public IList<UserProfile> readUserProfiles(double cutoff,int chunk)
+    public IList<UserProfile> readUserProfiles(string decay, string normalization, double cutoff, int attr_count, int chunk)
     {
 
       var profiles = new List<UserProfile>();
 
-      reader = new StreamReader(dir_path + "\\profiles\\constant_" + cutoff + "_pt" + chunk + ".csv");
+      reader = new StreamReader(dir_path + "\\profiles\\" + decay + "_" + normalization + "_" + cutoff + "_" + attr_count + "_pt" + chunk + ".csv");
 
       while (!reader.EndOfStream)
       {
@@ -318,10 +313,9 @@ namespace TCCSharpRecSys.Persistence
           var args = reader.ReadLine().Split(',');
           var user_id = int.Parse(args[0]);
           var n_ratings = int.Parse(args[1]);
-          var first_n = int.Parse(args[2]);
-          var last_n = int.Parse(args[3]);
+          var correct_n = int.Parse(args[2]);
 
-          var recResults = new RecommendationResults(new UserProfile(user_id, null), n_ratings, first_n, last_n);
+          var recResults = new RecommendationResults(new UserProfile(user_id, null), n_ratings, correct_n);
           recomendationResults.Add(recResults);
         }
         reader.Close();
@@ -332,6 +326,50 @@ namespace TCCSharpRecSys.Persistence
       return results;
     }
     
+    public IList<Rating> ratings()
+    {
+      if (movies_read == null || !movies_read.Any())
+        readMovies();
+      reader = new StreamReader(dir_path + "ratings.csv");
 
+      var ratings = new List<Rating>();
+
+      while (!reader.EndOfStream)
+      {
+        var line = reader.ReadLine();
+        var props = line.Split(',');
+
+        var movieId = int.Parse(props[0]);
+        var userId = int.Parse(props[1]);
+        var rating = double.Parse(props[2]);
+        var timestamp = double.Parse(props[3]);
+
+        ratings.Add(new Rating(movies_read.Single(mr => mr.id == movieId), userId, rating, new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(timestamp)));
+      }
+        
+      reader.Close();
+      reader = null;
+
+      return ratings;
+    }
+
+
+    public IList<string> filesInPath(string relPath)
+    {
+      return Directory.GetFiles(dir_path + relPath);
+    }
+
+    public IList<string> readWholeFile(string relPath)
+    {
+      var contents = new List<string>();
+
+      reader = new StreamReader(dir_path + relPath);
+
+      while (!reader.EndOfStream)
+        contents.Add(reader.ReadLine());
+
+      return contents;
+    }
   }
 }
+
