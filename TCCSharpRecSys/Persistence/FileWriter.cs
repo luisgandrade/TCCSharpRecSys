@@ -141,24 +141,7 @@ namespace TCCSharpRecSys.Persistence
           writter.WriteLine(profile.user_id + profile.profile.Aggregate("", (acc, n) => acc + "," + n));
       }
     }
-
-    //public void writeClusters(IList<Cluster> clusters)
-    //{
-    //  if (!Directory.Exists(file_path + "standard_k_means"))
-    //    Directory.CreateDirectory(file_path + "standard_k_means");
-    //  var existingFilesInDirectory = Directory.GetFiles(file_path + "standard_k_means\\");
-    //  var regex = new Regex(clusters.Count + "_([0-9]*).csv");
-    //  var maxInstance = existingFilesInDirectory.Where(f => regex.IsMatch(f)).Select(f => int.Parse(regex.Match(f).Groups[1].Value)).DefaultIfEmpty(0).Max();
-
-    //  using (var writter = new StreamWriter(file_path + "standard_k_means\\" + clusters.Count + "_" + (maxInstance + 1) + ".csv"))
-    //  {
-    //    foreach (var cluster in clusters)
-    //      writter.WriteLine(cluster.id + "," + cluster.centroid.Aggregate("", (acc, n) => acc + "," + n));
-    //  }
-    //}
-
-    // user_id, filmes recomendados com match, numero de filmes para treino
-    
+  
 
     public void writeRecommendationResults(string sub_dir, string file_prefix, double cutoff, string decay, string normalization, int predictNextN, int instance, 
       IList<RecommendationResults> recResults)
@@ -178,29 +161,39 @@ namespace TCCSharpRecSys.Persistence
       using (var writter = new StreamWriter(dir_path + sub_dir + "\\recommend\\" + file_prefix + "_" + cutoff + "_" + decay + "_" + normalization + "_" + predictNextN + "_" + instance + ".csv"))
       {
         foreach (var result in recResults)
-          writter.WriteLine(result.user.user_id + "," + result.number_of_ratings + "," + result.number_of_correct_predictions);
+          writter.WriteLine(result.user.user_id + "," + result.number_of_ratings + "," + result.precision);
       }
     }
+    
 
-
-    public void writeUsersWithQuantityOfRatings(decimal cutoff, IList<Tuple<int, int, int>> usersAndRatings)
+    public void writeAggregatedResults(string sub_dir, string filenameWithoutExtension, IList<AggregatedResults> aggregatedResults)
     {
-      using(var writter = new StreamWriter(dir_path + "profiles\\usersAndRatings_" + cutoff + ".csv"))
+
+      if (!Directory.Exists(dir_path + sub_dir + "\\evaluate"))
+        Directory.CreateDirectory(dir_path + sub_dir + "\\evaluate");
+
+      using (var writter = new StreamWriter(dir_path + sub_dir + "\\evaluate\\" + filenameWithoutExtension + ".csv"))
       {
-        foreach (var user in usersAndRatings)
-          writter.WriteLine(user.Item1 + "," + user.Item2 + "," + user.Item3);
+        foreach (var result in aggregatedResults)
+          writter.WriteLine(result.precision + "," + result.count + "," + result.average + "," + result.std_dev + "," + result.min + "," + result.max);
       }
+
+      using (var writter = new StreamWriter(dir_path + sub_dir + "\\evaluate\\all_configs.csv", true))
+      {
+        foreach (var result in aggregatedResults)
+          writter.WriteLine(result.precision + "," + result.count + "," + result.average + "," + result.std_dev + "," + result.min + "," + result.max);
+      }
+
     }
 
-
-    public void writeRatings(IList<Rating> ratings, int chunk)
-    {
-      using (var writter = new StreamWriter(dir_path + "ratings_pt" + chunk + ".csv"))
-      {
-        foreach (var rating in ratings)
-          writter.WriteLine(rating.movie.id + "," + rating.user_id + "," + rating.rating + "," + (rating.timestamp - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds);
-      }
-    }
+    //public void writeRatings(IList<Rating> ratings, int chunk)
+    //{
+    //  using (var writter = new StreamWriter(dir_path + "ratings_pt" + chunk + ".csv"))
+    //  {
+    //    foreach (var rating in ratings)
+    //      writter.WriteLine(rating.movie.id + "," + rating.user_id + "," + rating.rating + "," + (rating.timestamp - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds);
+    //  }
+    //}
 
   }
 }

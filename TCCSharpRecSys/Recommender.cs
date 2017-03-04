@@ -44,21 +44,22 @@ namespace TCCSharpRecSys
       var moviesRecommended = 0;      
       var numberOfCorrectPredictions = 0;
       var moviesByLabelEnumerator = moviesByLabel.GetEnumerator();
-           
 
-      while (moviesRecommended < recommend_n_movies && numberOfCorrectPredictions < ratingsNotIncluded.Count)
+      var next2nRatings = ratingsNotIncluded.OrderBy(rni => rni.timestamp).Take(2 * recommend_n_movies).ToList();
+
+      while (moviesRecommended < recommend_n_movies && numberOfCorrectPredictions < next2nRatings.Count)
       {
         moviesByLabelEnumerator.MoveNext();
         var movie = moviesByLabelEnumerator.Current;
         if (!moviesAlreadyWatched.Contains(movie))
         {
-          if (ratingsNotIncluded.Any(r => r.movie == movie && r.rating > ratingAverage))
+          if (next2nRatings.Any(r => r.movie == movie && r.rating > ratingAverage))
             numberOfCorrectPredictions++;
           moviesRecommended++;
         }
       }
 
-      return new RecommendationResults(userProfile, moviesAlreadyWatched.Count + ratingsNotIncluded.Count, numberOfCorrectPredictions);
+      return new RecommendationResults(userProfile, moviesAlreadyWatched.Count + ratingsNotIncluded.Count, numberOfCorrectPredictions / (double) recommend_n_movies);
     }
 
 

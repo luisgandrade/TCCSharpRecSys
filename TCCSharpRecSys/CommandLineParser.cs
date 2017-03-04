@@ -378,6 +378,55 @@ namespace TCCSharpRecSys
       };
     }
 
+
+    private Action evaluate(string args)
+    {
+      if (args == null)
+        throw new ArgumentException("args");
+
+      var regex = new Regex("(.*?) instances=([0-9]+),([0-9]+) tag_pop=([0-9]+) ct=(0\\.[1-9]) (.*?) (.*?) p=([0-9]+)");
+
+      var match = regex.Match(args);
+
+      if (!match.Success)
+        throw new InvalidOperationException("Não foi possível parsear para classificação.");
+
+      var algorithmInfo = match.Groups[1].Value;
+      var firstInstance = int.Parse(match.Groups[2].Value);
+      var lastInstance = int.Parse(match.Groups[3].Value);
+      var tagPopularity = int.Parse(match.Groups[4].Value);
+      var userProfileCutoff = double.Parse(match.Groups[5].Value);
+      var decay = match.Groups[6].Value;
+      var normalization = match.Groups[7].Value;
+      var recommendN = int.Parse(match.Groups[8].Value);
+
+      var attrCount = FileReader.getInstance().readTags(tagPopularity).Count;
+
+      if (firstInstance > lastInstance)
+        throw new ArgumentOutOfRangeException("O limite inferior do range é maior que o limite superior.");
+
+      var algorithmGen = parseAlgorithm(algorithmInfo, attrCount);
+
+      return () =>
+      {
+        var algDummy = algorithmGen();
+        var fileReader = FileReader.getInstance();
+        var fileWriter = FileWriter.getInstance();
+        for (int i = firstInstance; i <= lastInstance; i++)
+        {
+          var recResults = fileReader.readResults(algDummy.sub_dir, algDummy.file_prefix, userProfileCutoff, decay, normalization, recommendN, i);
+
+          var aggregatedResults = recResults.GroupBy(rr => rr.precision)
+                                           .Select(rr => new AggregatedResults(args, rr.Key, rr.Count(), rr.Average(rr1 => rr1.number_of_ratings), rr.StdDev(rr1 => rr1.number_of_ratings),
+                                             rr.Min(rr1 => rr1.number_of_ratings), rr.Max(rr1 => rr1.number_of_ratings)));
+          fileWriter.writeAggregatedResults(algDummy.sub_dir, algDummy.file_prefix + "_" + userProfileCutoff + "_" + decay + "_" + normalization + "_" + recommendN + "_" + i, aggregatedResults.ToList());
+          Console.WriteLine(algDummy.file_prefix + "_" + userProfileCutoff + "_" + decay + "_" + normalization + "_" + recommendN + "_" + i + " OK!");
+        }
+
+      };
+
+    }
+
     private Action buildUserProfiles(double cutoff, string decay, string normalizationFunction, int tagPopularity)
     {
       if(cutoff <= 0 || cutoff >= 1)
@@ -560,6 +609,7 @@ namespace TCCSharpRecSys
     }
     
 
+    
 
 
   }

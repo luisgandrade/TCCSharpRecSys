@@ -299,31 +299,23 @@ namespace TCCSharpRecSys.Persistence
       return classLabelsStr;
     }
     
-    public IList<KeyValuePair<string, IList<RecommendationResults>>> readResults(string sub_dir)
+    public IList<RecommendationResults> readResults(string sub_dir, string file_prefix, double cutoff, string decay, string normalization, int recommendN, int instance)
     {
+      reader = new StreamReader(dir_path + sub_dir + "\\recommend\\" + file_prefix + "_" + cutoff + "_" + decay + "_" + normalization + "_" + recommendN + "_" + instance + ".csv");
+      var recommendationResults = new List<RecommendationResults>();
 
-      var files = Directory.GetFiles(dir_path + sub_dir + "\\recommend");
-      var results = new List<KeyValuePair<string, IList<RecommendationResults>>>();
-      foreach (var file in files)
+      while (!reader.EndOfStream)
       {
-        reader = new StreamReader(file);
-        var recomendationResults = new List<RecommendationResults>();
-        while (!reader.EndOfStream)
-        {
-          var args = reader.ReadLine().Split(',');
-          var user_id = int.Parse(args[0]);
-          var n_ratings = int.Parse(args[1]);
-          var correct_n = int.Parse(args[2]);
+        var args = reader.ReadLine().Split(',');
+        var user_id = int.Parse(args[0]);
+        var n_ratings = int.Parse(args[1]);
+        var precision = double.Parse(args[2]);
 
-          var recResults = new RecommendationResults(new UserProfile(user_id, null), n_ratings, correct_n);
-          recomendationResults.Add(recResults);
-        }
-        reader.Close();
-        results.Add(new KeyValuePair<string, IList<RecommendationResults>>(file, recomendationResults));
+        var recResults = new RecommendationResults(new UserProfile(user_id, null), n_ratings, precision);
+        recommendationResults.Add(recResults);       
       }
-      
 
-      return results;
+      return recommendationResults;
     }
     
     public IList<Rating> ratings()
@@ -351,24 +343,6 @@ namespace TCCSharpRecSys.Persistence
       reader = null;
 
       return ratings;
-    }
-
-
-    public IList<string> filesInPath(string relPath)
-    {
-      return Directory.GetFiles(dir_path + relPath);
-    }
-
-    public IList<string> readWholeFile(string relPath)
-    {
-      var contents = new List<string>();
-
-      reader = new StreamReader(dir_path + relPath);
-
-      while (!reader.EndOfStream)
-        contents.Add(reader.ReadLine());
-
-      return contents;
     }
   }
 }
