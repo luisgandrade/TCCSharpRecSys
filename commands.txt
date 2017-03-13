@@ -1,37 +1,31 @@
 set_dir C:\Users\luis\Documents\Projetos\tccsharprecsys\Data\
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=50
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=50
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=50
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=50
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=50
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=50
-recommend kmeans cl=100 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=50
-recommend kmeans cl=100 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=50
-recommend kmeans cl=100 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=50
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=50
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=50
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=50
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=50
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=50
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=50
-recommend kmeans cl=100 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=50
-recommend kmeans cl=100 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=50
-recommend kmeans cl=100 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=50
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=25
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=25
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=25
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=25
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=25
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=25
-recommend kmeans cl=100 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=25
-recommend kmeans cl=100 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=25
-recommend kmeans cl=100 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=25
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=25
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=25
-recommend som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=25
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=25
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=25
-recommend som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=25
-recommend kmeans cl=100 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=25
-recommend kmeans cl=100 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=25
-recommend kmeans cl=100 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=25
+evaluate som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=50
+evaluate som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=50
+evaluate som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=50
+evaluate som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=50
+evaluate som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=50
+evaluate som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=50
+evaluate som r=20 c=20 mt=euclidian n=gaussian niw=20 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=50
+evaluate som r=20 c=20 mt=euclidian n=gaussian niw=20 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=50
+evaluate som r=20 c=20 mt=euclidian n=gaussian niw=20 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=50
+evaluate som r=10 c=10 mt=cosine n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=50
+evaluate som r=10 c=10 mt=cosine n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=50
+evaluate som r=10 c=10 mt=cosine n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=50
+evaluate som r=15 c=15 mt=cosine n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 constant feature_scaling p=50
+evaluate som r=15 c=15 mt=cosine n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 constant feature_scaling p=50
+evaluate som r=15 c=15 mt=cosine n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 constant feature_scaling p=50
+evaluate som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=50
+evaluate som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=50
+evaluate som r=10 c=10 mt=euclidian n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=50
+evaluate som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=50
+evaluate som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=50
+evaluate som r=15 c=15 mt=euclidian n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=50
+evaluate som r=20 c=20 mt=euclidian n=gaussian niw=20 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=50
+evaluate som r=20 c=20 mt=euclidian n=gaussian niw=20 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=50
+evaluate som r=20 c=20 mt=euclidian n=gaussian niw=20 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=50
+evaluate som r=10 c=10 mt=cosine n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=50
+evaluate som r=10 c=10 mt=cosine n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=50
+evaluate som r=10 c=10 mt=cosine n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=50
+evaluate som r=15 c=15 mt=cosine n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=50
+evaluate som r=15 c=15 mt=cosine n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=50
+evaluate som r=15 c=15 mt=cosine n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=50

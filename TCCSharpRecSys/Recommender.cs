@@ -59,7 +59,7 @@ namespace TCCSharpRecSys
         }
       }
 
-      return new RecommendationResults(userProfile, moviesAlreadyWatched.Count + ratingsNotIncluded.Count, numberOfCorrectPredictions / (double) recommend_n_movies);
+      return new RecommendationResults(userProfile.user_id, moviesAlreadyWatched.Count + ratingsNotIncluded.Count, numberOfCorrectPredictions / (double) recommend_n_movies);
     }
 
 

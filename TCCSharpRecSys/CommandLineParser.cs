@@ -85,6 +85,8 @@ namespace TCCSharpRecSys
           return classify(match.Groups[2].Value);
         case "recommend":
           return recommend(match.Groups[2].Value);
+        case "evaluate":
+          return evaluate(match.Groups[2].Value);
         default:
           throw new NotSupportedException("Opção \"" + train(match.Groups[1].Value) + "\" não encontrada.");
       }
@@ -153,7 +155,7 @@ namespace TCCSharpRecSys
       if (args == null)
         throw new ArgumentException("args");
 
-      var regex = new Regex("(.*?) instances=([1-9]+),([0-9]+) tag_pop=([0-9]+)");
+      var regex = new Regex("(.*?) instances=([0-9]+),([0-9]+) tag_pop=([0-9]+)");
 
 
       var match = regex.Match(args);
@@ -184,7 +186,7 @@ namespace TCCSharpRecSys
       {
         var dummyAlg = algorithmGen();
         var exisingTrainedModels = FileReader.getInstance().existingInstances(dummyAlg.sub_dir, dummyAlg.file_prefix);
-        if(Enumerable.Range(firstInstance, lastInstance - firstInstance + 1).Except(exisingTrainedModels).Count() > 0)
+        if(Enumerable.Range(firstInstance, lastInstance - firstInstance + 1).Except(exisingTrainedModels.OrderBy(etm => etm)).Count() != 0)
           throw new InvalidOperationException("O comando deve classificar de acordo as instâncias de " + firstInstance + " até " + lastInstance + ". Porém, as " +
             "seguintes instâncias não foram encontradas em disco: " + 
             string.Join(",", Enumerable.Range(firstInstance, lastInstance - firstInstance + 1).Except(exisingTrainedModels).ToArray()));
@@ -238,7 +240,7 @@ namespace TCCSharpRecSys
         var parallelizationThreshold = (int)((lastInstance - firstInstance + 1) / (decimal)number_of_threads);
 
         var tasks = Enumerable.Range(1, number_of_threads).Select(r => Task.Run(action(firstInstance + (r - 1) * parallelizationThreshold,
-          lastInstance - (number_of_threads - r) * parallelizationThreshold - 1)));
+          lastInstance - (number_of_threads - r) * parallelizationThreshold - (r == number_of_threads ? 0 : 1))));
 
         Task.WaitAll(tasks.ToArray());
 
@@ -280,7 +282,7 @@ namespace TCCSharpRecSys
         var fileWriter = FileWriter.getInstance();
         var dummyAlg = algorithmGen();
         var exisingTrainedModels = fileReader.existingInstances(dummyAlg.sub_dir, dummyAlg.file_prefix);
-        if (!exisingTrainedModels.OrderBy(etm => etm).SequenceEqual(Enumerable.Range(firstInstance, lastInstance)))
+        if (Enumerable.Range(firstInstance, lastInstance - firstInstance + 1).Except(exisingTrainedModels.OrderBy(etm => etm)).Count() != 0)
           throw new InvalidOperationException("O comando deve classificar de acordo as instâncias de " + firstInstance + " até " + lastInstance + ". Porém, as " +
             "seguintes instâncias não foram encontradas em disco: " + string.Join(",", exisingTrainedModels.ToArray()));
         
@@ -372,7 +374,7 @@ namespace TCCSharpRecSys
         var parallelizationThreshold = (int)((lastInstance - firstInstance + 1) / (decimal) number_of_threads);
 
         var tasks = Enumerable.Range(1, number_of_threads).Select(r => Task.Run(act(firstInstance + (r - 1) * parallelizationThreshold,
-          lastInstance - (number_of_threads - r) * parallelizationThreshold - 1)));
+          lastInstance - (number_of_threads - r) * parallelizationThreshold - (r == number_of_threads ? 0 : 1))));
 
         Task.WaitAll(tasks.ToArray());        
       };
@@ -407,8 +409,15 @@ namespace TCCSharpRecSys
 
       var algorithmGen = parseAlgorithm(algorithmInfo, attrCount);
 
+      //Split nos Quartis: 6, 34, 67, 154, 6586
+      //Split nos 10-Percentis: 6, 24, 30, 39, 51, 67, 92, 127, 192, 332, 6586 (de 10 em 10)
       return () =>
       {
+
+        var splitQuartiles = new[] { new { split = 1, min = 6, max = 34 }, new { split = 2, min = 35, max = 67 }, new { split = 3, min = 68, max = 154 }, new { split = 1, min = 155, max = 6586 }, };
+        var splitPercentiles = new[] { new { split = 1, min = 6, max = 24 }, new { split = 2, min = 25, max = 30 }, new { split = 3, min = 31, max = 39 }, new { split = 4, min = 40, max = 51 },
+          new { split = 5, min = 52, max = 67 }, new { split = 6, min = 68, max = 92 }, new { split = 7, min = 93, max = 127 }, new { split = 8, min = 128, max = 192 },
+          new { split = 9, min = 193, max = 332 }, new { split = 10, min = 333, max = 6586 }};
         var algDummy = algorithmGen();
         var fileReader = FileReader.getInstance();
         var fileWriter = FileWriter.getInstance();
@@ -416,10 +425,26 @@ namespace TCCSharpRecSys
         {
           var recResults = fileReader.readResults(algDummy.sub_dir, algDummy.file_prefix, userProfileCutoff, decay, normalization, recommendN, i);
 
-          var aggregatedResults = recResults.GroupBy(rr => rr.precision)
-                                           .Select(rr => new AggregatedResults(args, rr.Key, rr.Count(), rr.Average(rr1 => rr1.number_of_ratings), rr.StdDev(rr1 => rr1.number_of_ratings),
-                                             rr.Min(rr1 => rr1.number_of_ratings), rr.Max(rr1 => rr1.number_of_ratings)));
-          fileWriter.writeAggregatedResults(algDummy.sub_dir, algDummy.file_prefix + "_" + userProfileCutoff + "_" + decay + "_" + normalization + "_" + recommendN + "_" + i, aggregatedResults.ToList());
+          var resultsAndGroups = recResults.Select(rr => new
+          {
+            result = rr,
+            splitQt = splitQuartiles.Single(sp => rr.number_of_ratings >= sp.min && rr.number_of_ratings <= sp.max),
+            splitPt = splitPercentiles.Single(sp => rr.number_of_ratings >= sp.min && rr.number_of_ratings <= sp.max),
+          });
+
+
+          var aggResultsAll = new AggregatedResults(algDummy.file_prefix, 6, 6586, recResults.Average(rr => rr.precision), recResults.StdDev(rr => rr.precision));
+          var aggResultsQt = resultsAndGroups.GroupBy(rg => rg.splitQt)
+                                             .Select(rg => new { min = rg.Key.min, max = rg.Key.max, results = rg.ToList() })
+                                             .Select(rg => new AggregatedResults(algDummy.file_prefix, rg.min, rg.max, rg.results.Average(rg1 => rg1.result.precision),
+                                               rg.results.StdDev(rg1 => rg1.result.precision)));
+          var aggResultPt = resultsAndGroups.GroupBy(rg => rg.splitPt)
+                                            .Select(rg => new { min = rg.Key.min, max = rg.Key.max, results = rg.ToList() })
+                                            .Select(rg => new AggregatedResults(algDummy.file_prefix, rg.min, rg.max, rg.results.Average(rg1 => rg1.result.precision),
+                                               rg.results.StdDev(rg1 => rg1.result.precision)));
+
+          fileWriter.writeAggregatedResults(algDummy.sub_dir, algDummy.file_prefix + "_" + userProfileCutoff + "_" + decay + "_" + normalization + "_" + recommendN + "_" + i, 
+            aggResultsQt.ToList(), aggResultPt.ToList(), aggResultsAll);
           Console.WriteLine(algDummy.file_prefix + "_" + userProfileCutoff + "_" + decay + "_" + normalization + "_" + recommendN + "_" + i + " OK!");
         }
 

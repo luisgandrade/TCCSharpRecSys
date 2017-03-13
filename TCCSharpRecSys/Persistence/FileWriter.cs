@@ -161,27 +161,51 @@ namespace TCCSharpRecSys.Persistence
       using (var writter = new StreamWriter(dir_path + sub_dir + "\\recommend\\" + file_prefix + "_" + cutoff + "_" + decay + "_" + normalization + "_" + predictNextN + "_" + instance + ".csv"))
       {
         foreach (var result in recResults)
-          writter.WriteLine(result.user.user_id + "," + result.number_of_ratings + "," + result.precision);
+          writter.WriteLine(result.user_id + "," + result.number_of_ratings + "," + result.precision);
       }
     }
-    
 
-    public void writeAggregatedResults(string sub_dir, string filenameWithoutExtension, IList<AggregatedResults> aggregatedResults)
+
+    public void writeAggregatedResults(string sub_dir, string filenameWithoutExtension, IList<AggregatedResults> aggregatedResultsQt, IList<AggregatedResults> aggregatedResultsPt,
+      AggregatedResults aggregatedResultsAll)
     {
-
+      
+      if(!Directory.Exists(dir_path + "evaluate"))
+        Directory.CreateDirectory(dir_path + "evaluate");
       if (!Directory.Exists(dir_path + sub_dir + "\\evaluate"))
         Directory.CreateDirectory(dir_path + sub_dir + "\\evaluate");
 
-      using (var writter = new StreamWriter(dir_path + sub_dir + "\\evaluate\\" + filenameWithoutExtension + ".csv"))
+      foreach (var result in aggregatedResultsQt)
       {
-        foreach (var result in aggregatedResults)
-          writter.WriteLine(result.precision + "," + result.count + "," + result.average + "," + result.std_dev + "," + result.min + "," + result.max);
+        using (var writter = new StreamWriter(dir_path + "evaluate\\qt_" + result.min + "_" + result.max +".csv", true))
+        {
+          writter.WriteLine(filenameWithoutExtension + ","  + result.average + "," + result.std_dev);
+        }
       }
 
-      using (var writter = new StreamWriter(dir_path + sub_dir + "\\evaluate\\all_configs.csv", true))
+      foreach (var result in aggregatedResultsPt)
       {
-        foreach (var result in aggregatedResults)
-          writter.WriteLine(result.precision + "," + result.count + "," + result.average + "," + result.std_dev + "," + result.min + "," + result.max);
+        using (var writter = new StreamWriter(dir_path + "evaluate\\pt_" + result.min + "_" + result.max + ".csv", true))
+        {
+          writter.WriteLine(filenameWithoutExtension + "," + result.average + "," + result.std_dev);
+        }
+      }
+
+      using (var writter = new StreamWriter(dir_path + "evaluate\\all.csv", true))
+      {
+        writter.WriteLine(filenameWithoutExtension + "," + aggregatedResultsAll.average + "," + aggregatedResultsAll.std_dev);
+      }
+
+
+      using (var writter = new StreamWriter(dir_path + sub_dir + "\\evaluate\\" + filenameWithoutExtension + ".csv"))
+      {
+
+        foreach (var aggRes in aggregatedResultsQt)
+          writter.WriteLine(filenameWithoutExtension + "," + aggRes.min + "," + aggRes.max + "," + aggRes.average + "," + aggRes.std_dev);
+        foreach (var aggRes in aggregatedResultsPt)
+          writter.WriteLine(filenameWithoutExtension + "," + aggRes.min + "," + aggRes.max + "," + aggRes.average + "," + aggRes.std_dev);
+
+
       }
 
     }

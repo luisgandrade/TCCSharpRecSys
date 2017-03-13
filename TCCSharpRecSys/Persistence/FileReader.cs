@@ -311,7 +311,7 @@ namespace TCCSharpRecSys.Persistence
         var n_ratings = int.Parse(args[1]);
         var precision = double.Parse(args[2]);
 
-        var recResults = new RecommendationResults(new UserProfile(user_id, null), n_ratings, precision);
+        var recResults = new RecommendationResults(user_id, n_ratings, precision);
         recommendationResults.Add(recResults);       
       }
 
