@@ -166,7 +166,7 @@ namespace TCCSharpRecSys.Persistence
     }
 
 
-    public void writeAggregatedResults(string sub_dir, string filenameWithoutExtension, IList<AggregatedResults> aggregatedResultsQt, IList<AggregatedResults> aggregatedResultsPt,
+    public void writeAggregatedResults(string sub_dir, string filenameWithoutExtension, int instance, IList<AggregatedResults> aggregatedResultsQt, IList<AggregatedResults> aggregatedResultsPt,
       AggregatedResults aggregatedResultsAll)
     {
       
@@ -197,12 +197,13 @@ namespace TCCSharpRecSys.Persistence
       }
 
 
-      using (var writter = new StreamWriter(dir_path + sub_dir + "\\evaluate\\" + filenameWithoutExtension + ".csv"))
+      using (var writter = new StreamWriter(dir_path + sub_dir + "\\evaluate\\" + filenameWithoutExtension + "_" + instance + ".csv"))
       {
 
-        foreach (var aggRes in aggregatedResultsQt)
+        foreach (var aggRes in aggregatedResultsQt.OrderBy(ar => ar.min))
           writter.WriteLine(filenameWithoutExtension + "," + aggRes.min + "," + aggRes.max + "," + aggRes.average + "," + aggRes.std_dev);
-        foreach (var aggRes in aggregatedResultsPt)
+        
+        foreach (var aggRes in aggregatedResultsPt.OrderBy(ar => ar.min))
           writter.WriteLine(filenameWithoutExtension + "," + aggRes.min + "," + aggRes.max + "," + aggRes.average + "," + aggRes.std_dev);
 
 

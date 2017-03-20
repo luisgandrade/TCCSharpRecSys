@@ -315,6 +315,9 @@ namespace TCCSharpRecSys.Persistence
         recommendationResults.Add(recResults);       
       }
 
+      reader.Close();
+      reader = null;
+
       return recommendationResults;
     }
     

@@ -29,3 +29,12 @@ evaluate som r=10 c=10 mt=cosine n=gaussian niw=10 lri=0.1 lrtc=1000 instances=1
 evaluate som r=15 c=15 mt=cosine n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=25 ct=0.5 exponential feature_scaling p=50
 evaluate som r=15 c=15 mt=cosine n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=50 ct=0.5 exponential feature_scaling p=50
 evaluate som r=15 c=15 mt=cosine n=gaussian niw=15 lri=0.1 lrtc=1000 instances=1,10 tag_pop=75 ct=0.5 exponential feature_scaling p=50
+evaluate kmeans cl=100 instances=1,5 tag_pop=25 ct=0.5 constant feature_scaling p=50
+evaluate kmeans cl=100 instances=1,5 tag_pop=50 ct=0.5 constant feature_scaling p=50
+evaluate kmeans cl=100 instances=1,5 tag_pop=75 ct=0.5 constant feature_scaling p=50
+evaluate kmeans cl=100 instances=1,5 tag_pop=25 ct=0.5 exponential feature_scaling p=50
+evaluate kmeans cl=100 instances=1,5 tag_pop=50 ct=0.5 exponential feature_scaling p=50
+evaluate kmeans cl=100 instances=1,5 tag_pop=75 ct=0.5 exponential feature_scaling p=50
+evaluate kmeans cl=300 instances=1,5 tag_pop=25 ct=0.5 constant feature_scaling p=50
+evaluate kmeans cl=300 instances=1,5 tag_pop=50 ct=0.5 constant feature_scaling p=50
+evaluate kmeans cl=300 instances=1,5 tag_pop=75 ct=0.5 constant feature_scaling p=50

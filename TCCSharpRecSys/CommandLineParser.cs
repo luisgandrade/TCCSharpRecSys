@@ -443,7 +443,7 @@ namespace TCCSharpRecSys
                                             .Select(rg => new AggregatedResults(algDummy.file_prefix, rg.min, rg.max, rg.results.Average(rg1 => rg1.result.precision),
                                                rg.results.StdDev(rg1 => rg1.result.precision)));
 
-          fileWriter.writeAggregatedResults(algDummy.sub_dir, algDummy.file_prefix + "_" + userProfileCutoff + "_" + decay + "_" + normalization + "_" + recommendN + "_" + i, 
+          fileWriter.writeAggregatedResults(algDummy.sub_dir, algDummy.file_prefix + "_" + userProfileCutoff + "_" + decay + "_" + normalization + "_" + recommendN, i,
             aggResultsQt.ToList(), aggResultPt.ToList(), aggResultsAll);
           Console.WriteLine(algDummy.file_prefix + "_" + userProfileCutoff + "_" + decay + "_" + normalization + "_" + recommendN + "_" + i + " OK!");
         }
